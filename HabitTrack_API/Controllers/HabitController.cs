@@ -1,7 +1,6 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
 using HabitTracker.Application.UseCases.Habits;
-using HabitTracker.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTrack_API.Controllers
@@ -22,8 +21,10 @@ namespace HabitTrack_API.Controllers
         [HttpGet("me/habits")]
         public async Task<IActionResult> GetUserHabits()
         {
-            var userId = _userContextService.GetCurrentUserId();
-            var habits = await _habitService.GetHabitsByUserIdAsync(userId);
+            var habits = await _habitService.GetHabitsByUserIdAsync();
+
+            if (habits == null || habits.Count == 0)
+                return NoContent();
 
             return Ok(habits);
         }
@@ -31,27 +32,28 @@ namespace HabitTrack_API.Controllers
         [HttpGet("{habitId}")]
         public async Task<IActionResult> GetHabitById(Guid habitId)
         {
-            var userId = _userContextService.GetCurrentUserId();
-            var habit = await _habitService.GetHabitByIdAsync(habitId, userId);
-            return Ok();
+            var habit = await _habitService.GetHabitByIdAsync(habitId);
+            return Ok(habit);
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateNewHabit([FromBody] HabitDTO habit)
+        public async Task<IActionResult> CreateNewHabit([FromBody] HabitDTO habitDto)
         {
-            var userId = _userContextService.GetCurrentUserId();
-            var createHabit = await _habitService.AddNewHabitAsync(userId, habit);
-            return Ok(createHabit);
+            var habit = await _habitService.AddNewHabitAsync(habitDto);
+
+            var response = new HabitDTO()
+            {
+                Title = habit.Title,
+                Description = habit.Description
+            };
+
+            return CreatedAtAction(nameof(GetHabitById), new {habitId = habit.Id}, response);
         }
 
-        [HttpPost("update/{habitId}")]
+        [HttpPut("update/{habitId}")]
         public async Task<IActionResult> UpdateAnExistingHabit([FromBody] HabitDTO habitDto, Guid habitId)
         {
-            var userId = _userContextService.GetCurrentUserId();
-            var updateHabit = await _habitService.UpdateHabit(habitId, habitDto, userId);
-
-            if (updateHabit == null)
-                return Forbid();
+            var updateHabit = await _habitService.UpdateHabit(habitId, habitDto);
 
             return Ok(updateHabit);
         }
@@ -59,10 +61,9 @@ namespace HabitTrack_API.Controllers
         [HttpDelete("{habitId}")]
         public async Task<IActionResult> RemoveHabitAsync(Guid habitId)
         {
-            var userId = _userContextService.GetCurrentUserId();
-            var habit = await _habitService.GetHabitByIdAsync(habitId, userId);
+            var habit = await _habitService.GetHabitByIdAsync(habitId);
 
-            if (habit == null || habit.Id == userId)
+            if (habit == null)
                 return NotFound();
 
             await _habitService.RemoveHabitAsync(habit);
