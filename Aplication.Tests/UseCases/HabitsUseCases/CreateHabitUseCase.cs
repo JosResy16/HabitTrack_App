@@ -4,6 +4,7 @@ using HabitTracker.Application.UseCases.Habits;
 using HabitTracker.Domain.Entities;
 using Moq;
 using NUnit.Framework.Constraints;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace Aplication.Tests.UseCases.Habits
@@ -32,10 +33,10 @@ namespace Aplication.Tests.UseCases.Habits
             var description = "Wake up at 6 am every day";
             var habitDto = new HabitDTO { Title = title, Description = description };
 
-            Habit? habitSaved = null;
+            HabitEntity? habitSaved = null;
 
-            _habitRepositoryMock.Setup(x => x.AddAsync(It.IsAny<Habit>()))
-                .Callback<Habit>(h => habitSaved = h)
+            _habitRepositoryMock.Setup(x => x.AddAsync(It.IsAny<HabitEntity>()))
+                .Callback<HabitEntity>(h => habitSaved = h)
                 .Returns(Task.CompletedTask);
 
             var result = await _habitService.AddNewHabitAsync(habitDto);
@@ -46,7 +47,24 @@ namespace Aplication.Tests.UseCases.Habits
             Assert.AreEqual(description, result.Description);
             Assert.IsNotNull(habitSaved);
 
-            _habitRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Habit>()), Times.Once);
+            _habitRepositoryMock.Verify(r => r.AddAsync(It.IsAny<HabitEntity>()), Times.Once);
+        }
+
+        [Test]
+        public async Task CreateHabitASync_WithInvalidData_ShouldThrowValidationException()
+        {
+            var userId = Guid.NewGuid();
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+
+            string title = "";
+            string description = "";
+            var habitDto = new HabitDTO {Title = title, Description = description };
+
+            var ex = Assert.ThrowsAsync<ValidationException>(async () =>
+                await _habitService.AddNewHabitAsync(habitDto)
+            );
+
+            Assert.That(ex.Message, Is.EqualTo("Title is required."));
         }
     }
 }

@@ -18,7 +18,7 @@ namespace HabitTracker.Application.UseCases.Habits
             _userContextService = userContextService;
         }
 
-        public async Task<Habit> AddNewHabitAsync(HabitDTO habitDto)
+        public async Task<HabitEntity> AddNewHabitAsync(HabitDTO habitDto)
         {
             if (string.IsNullOrEmpty(habitDto.Title))
                 throw new ValidationException("Title is required.");
@@ -31,7 +31,7 @@ namespace HabitTracker.Application.UseCases.Habits
             if (userId == Guid.Empty)
                 throw new UnauthorizedAccessException("Invalid user context.");
 
-            Habit habit = new Habit
+            HabitEntity habit = new HabitEntity
             {
                 Id = Guid.NewGuid(),
                 Title = habitDto.Title,
@@ -43,7 +43,7 @@ namespace HabitTracker.Application.UseCases.Habits
             return habit;
         }
 
-        public async Task<Habit> GetHabitByIdAsync(Guid habitId)
+        public async Task<HabitEntity> GetHabitByIdAsync(Guid habitId)
         {
             var userId = _userContextService.GetCurrentUserId();
 
@@ -53,18 +53,18 @@ namespace HabitTracker.Application.UseCases.Habits
             return habit;
         }
 
-        public async Task<List<Habit>> GetHabitsByUserIdAsync()
+        public async Task<List<HabitEntity>> GetHabitsByUserIdAsync()
         {
             var userId = _userContextService.GetCurrentUserId();
             return await _habitRepository.GetHabitsByUserIdAsync(userId);
         }
 
-        public async Task RemoveHabitAsync(Habit habit)
+        public async Task RemoveHabitAsync(HabitEntity habit)
         {
             await _habitRepository.DeleteAsync(habit.Id);
         }
 
-        public async Task<Habit?> UpdateHabit(Guid habitId, HabitDTO habitDto)
+        public async Task<HabitEntity?> UpdateHabit(Guid habitId, HabitDTO habitDto)
         {
             var userId = _userContextService.GetCurrentUserId();
 

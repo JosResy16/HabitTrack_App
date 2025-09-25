@@ -21,7 +21,7 @@ namespace HabitTracker.Infrastructure.Repositories
         {
             _appSettings = appSettings.Value;
         }
-        public string GenerateToken(User user)
+        public string GenerateToken(UserEntity user)
         {
             var claims = new List<Claim>
             {

@@ -5,7 +5,8 @@ namespace HabitTracker.Infrastructure.Context
 {
     public class HabitTrackDBContext(DbContextOptions<HabitTrackDBContext> options) : DbContext(options)
     {
-        public DbSet<User> Users { get; set; }
-        public DbSet<Habit> Habits { get; set; }
+        public DbSet<UserEntity> Users { get; set; }
+        public DbSet<HabitEntity> Habits { get; set; }
+        public DbSet<CategoryEntity> Categories { get; set; }
     } 
 }

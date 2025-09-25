@@ -25,14 +25,14 @@ namespace HabitTracker.Application.UseCases.Auth
         }
 
         // register a new user
-        public async Task<User?> RegisterAsync(UserDTO request)
+        public async Task<UserEntity?> RegisterAsync(UserDTO request)
         {
             var existUser = await _userRepository.GetByUsernameAsync(request.UserName);
             if (existUser != null)
                 throw new ArgumentException("User already exist with this username");
 
-            var user = new User();
-            var hashPassword = new PasswordHasher<User>()
+            var user = new UserEntity();
+            var hashPassword = new PasswordHasher<UserEntity>()
                .HashPassword(user, request.Password);
 
             user.UserName = request.UserName;
@@ -51,7 +51,7 @@ namespace HabitTracker.Application.UseCases.Auth
             {
                 throw new UnauthorizedAccessException("username or password invalid");
             }
-            if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHashed, request.Password)
+            if (new PasswordHasher<UserEntity>().VerifyHashedPassword(user, user.PasswordHashed, request.Password)
                 == PasswordVerificationResult.Failed)
             {
                 throw new UnauthorizedAccessException("username or password invalid");
@@ -71,7 +71,7 @@ namespace HabitTracker.Application.UseCases.Auth
         }
 
         // Create token response
-        private async Task<TokenResponseDTO> CreateTokenResponse(User user)
+        private async Task<TokenResponseDTO> CreateTokenResponse(UserEntity user)
         {
             return new TokenResponseDTO
             {
@@ -80,7 +80,7 @@ namespace HabitTracker.Application.UseCases.Auth
             };
         }
 
-        private async Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
+        private async Task<UserEntity?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
         {
             var user = await _userRepository.GetById(userId);
             if (user is null || user.RefreshToken != refreshToken
@@ -99,7 +99,7 @@ namespace HabitTracker.Application.UseCases.Auth
             return Convert.ToBase64String(randomNumber);
         }
 
-        private string GenerateAndSaveRefreshTokenAsync(User user)
+        private string GenerateAndSaveRefreshTokenAsync(UserEntity user)
         {
             var refreshToken = GenerateRefreshToken();
             user.RefreshToken = refreshToken;

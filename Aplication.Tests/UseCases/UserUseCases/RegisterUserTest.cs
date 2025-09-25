@@ -33,14 +33,14 @@ namespace Aplication.Tests.UseCases.User
         {
             var fakeToken = "fake-jwt";
 
-            var user = new HabitTracker.Domain.Entities.User
+            var user = new HabitTracker.Domain.Entities.UserEntity
             {
                 UserName = "admin",
-                PasswordHashed = new PasswordHasher<HabitTracker.Domain.Entities.User>().HashPassword(null!, "1234")
+                PasswordHashed = new PasswordHasher<HabitTracker.Domain.Entities.UserEntity>().HashPassword(null!, "1234")
             };
 
             _userRepositoryMock.Setup(r => r.GetByUsernameAsync("admin")).ReturnsAsync(user);
-            _tokenGeneratorMock.Setup(r => r.GenerateToken(It.IsAny<HabitTracker.Domain.Entities.User>())).Returns(fakeToken);
+            _tokenGeneratorMock.Setup(r => r.GenerateToken(It.IsAny<HabitTracker.Domain.Entities.UserEntity>())).Returns(fakeToken);
 
             var request = new UserDTO
             {
@@ -59,10 +59,10 @@ namespace Aplication.Tests.UseCases.User
         [Test]
         public void LoginAsync_WithInvalidPassword_ThrowsUnauthorized()
         {
-            var user = new HabitTracker.Domain.Entities.User
+            var user = new HabitTracker.Domain.Entities.UserEntity
             {
                 UserName = "jose",
-                PasswordHashed = new PasswordHasher<HabitTracker.Domain.Entities.User>().HashPassword(null!, "correct-password")
+                PasswordHashed = new PasswordHasher<HabitTracker.Domain.Entities.UserEntity>().HashPassword(null!, "correct-password")
             };
 
             _userRepositoryMock.Setup(r => r.GetByUsernameAsync("jose")).ReturnsAsync(user);

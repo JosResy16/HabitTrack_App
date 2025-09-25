@@ -19,7 +19,7 @@ namespace HabitTrack_API.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<ActionResult<User>> Register(UserDTO request)
+        public async Task<ActionResult<UserEntity>> Register(UserDTO request)
         {
             var user = await _authService.RegisterAsync(request);
             if (user == null)

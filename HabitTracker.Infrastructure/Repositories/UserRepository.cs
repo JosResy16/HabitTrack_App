@@ -19,7 +19,7 @@ namespace HabitTracker.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task AddUserAsync(User user)
+        public async Task AddUserAsync(UserEntity user)
         {
             if (await _context.Users.AnyAsync(u => u.UserName == user.UserName))
                 return;
@@ -28,7 +28,7 @@ namespace HabitTracker.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<User?> GetByUsernameAsync(string username)
+        public async Task<UserEntity?> GetByUsernameAsync(string username)
         {
             var response = await _context.Users.SingleOrDefaultAsync(u => u.UserName == username);
             if (response is null)
@@ -36,7 +36,7 @@ namespace HabitTracker.Infrastructure.Repositories
             return response;
         }
 
-        public async Task<User?> GetById(Guid id)
+        public async Task<UserEntity?> GetById(Guid id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)

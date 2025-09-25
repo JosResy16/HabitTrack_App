@@ -27,7 +27,7 @@ namespace Aplication.Tests.UseCases.HabitsUseCases
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var habit = new Habit {Id = habitId, Title = "Read", UserId = userId };
+            var habit = new HabitEntity {Id = habitId, Title = "Read", UserId = userId };
 
             _habitRepositoryMock.Setup( r => r.GetByIdAsync(habitId))
                 .ReturnsAsync(habit);
@@ -50,7 +50,7 @@ namespace Aplication.Tests.UseCases.HabitsUseCases
             var habitId = Guid.NewGuid();
 
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId))
-                .ReturnsAsync((Habit?)null);
+                .ReturnsAsync((HabitEntity?)null);
 
             _userContextServiceMock.Setup(u => u.GetCurrentUserId())
                 .Returns(userId);

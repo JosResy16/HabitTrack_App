@@ -17,7 +17,7 @@ namespace HabitTracker.Infrastructure.Repositories
             _habitTrackDbContext = habitTrackDBContext;
         }
 
-        public async Task AddAsync(Habit habit)
+        public async Task AddAsync(HabitEntity habit)
         {
             await _habitTrackDbContext.Habits.AddAsync(habit);
             await _habitTrackDbContext.SaveChangesAsync();
@@ -32,19 +32,19 @@ namespace HabitTracker.Infrastructure.Repositories
             await _habitTrackDbContext.SaveChangesAsync();
         }
 
-        public async Task<Habit?> GetByIdAsync(Guid id)
+        public async Task<HabitEntity?> GetByIdAsync(Guid id)
         {
             var result =  await _habitTrackDbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
             return result;
         }
 
-        public async Task<List<Habit>> GetHabitsByUserIdAsync(Guid userId)
+        public async Task<List<HabitEntity>> GetHabitsByUserIdAsync(Guid userId)
         {
             var habits = await _habitTrackDbContext.Habits.Where(x => x.UserId == userId).ToListAsync();
             return habits;
         }
 
-        public async Task UpdateAsync(Habit habit)
+        public async Task UpdateAsync(HabitEntity habit)
         {
             _habitTrackDbContext.Update(habit);
             await _habitTrackDbContext.SaveChangesAsync();

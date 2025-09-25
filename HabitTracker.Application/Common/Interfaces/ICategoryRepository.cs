@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 
 namespace HabitTracker.Application.Common.Interfaces
 {
-    public interface ITokenGenerator
+    public interface ICategoryRepository
     {
-        string GenerateToken(UserEntity user);
+        public Task<CategoryEntity> GetCategoryByIdAsync(Guid id);
     }
-
 }

@@ -10,7 +10,7 @@ namespace HabitTracker.Application.UseCases.Auth
 {
     public interface IAuthService
     {
-        Task<User?> RegisterAsync(UserDTO request);
+        Task<UserEntity?> RegisterAsync(UserDTO request);
         Task<TokenResponseDTO?> LoginAsync(UserDTO request);
         Task<TokenResponseDTO?> RefreshTokenAsync(RefreshTokenRequestDTO request);
     }

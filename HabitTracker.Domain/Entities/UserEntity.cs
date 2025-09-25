@@ -2,7 +2,7 @@
 
 namespace HabitTracker.Domain.Entities
 {
-    public class User
+    public class UserEntity
     {
         public Guid Id { get; set; }
         public string UserName { get; set; } = string.Empty;
@@ -10,9 +10,9 @@ namespace HabitTracker.Domain.Entities
         public string Role { get; set; } = string.Empty;
         public string? RefreshToken { get; set; } = string.Empty;
         public DateTime RefreshTokenExpiryTime { get; set; }
-        public List<Habit> Habits { get; set; } = new();
+        public List<HabitEntity> Habits { get; set; } = new();
 
-        public void AddHabit(Habit habit)
+        public void AddHabit(HabitEntity habit)
         {
             Habits.Add(habit);
         }
