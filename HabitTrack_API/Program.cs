@@ -22,9 +22,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<HabitTrackDBContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("UserDatabase"));
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("UserDatabase")));
+
 
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
