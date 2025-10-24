@@ -18,66 +18,65 @@ namespace HabitTracker.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<Result<CategoryEntity>> AddCategoryAsync(CategoryEntity category)
+        public async Task<CategoryEntity> AddCategoryAsync(CategoryEntity category)
         {
             await _dbContext.AddAsync(category);
             await _dbContext.SaveChangesAsync();
-            return Result<CategoryEntity>.Success(category);
+            return category;
         }
 
-        public async Task<Result> DeleteCategoryAsync(Guid id)
+        public async Task<bool> DeleteCategoryAsync(Guid id)
         {
             var category = await _dbContext.Categories.FindAsync(id);
-            if (category != null)
-            {
-                category.IsDeleted = true;
-                _dbContext.Categories.Update(category);
-                await _dbContext.SaveChangesAsync();
-                return Result.Success();
-            }
-            return Result.Failure("category don't match with this value (id)");
+            if (category == null)
+                return false;
+
+            category.IsDeleted = true;
+            _dbContext.Categories.Update(category);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
-        public Result ExistByTitleAsync(Guid userId, string title)
+        public bool ExistByTitleAsync(Guid userId, string title)
         {
             var existingCategory = _dbContext.Categories.FindAsync(title);
              if (existingCategory.Result != null)
-                return Result.Failure("Category already exists with the same title");
+                return false;
 
-            return Result.Success();
+            return true;
         }
 
-        public async Task<Result<IEnumerable<CategoryEntity>>> GetCategoriesByUserIdAsync(Guid id)
+        public async Task<IEnumerable<CategoryEntity>> GetCategoriesByUserIdAsync(Guid id)
         {
             var categories = await _dbContext.Categories.
                         Where(c => c.UserId == id && !c.IsDeleted).
                         OrderBy(c => c.Title).
                         ToListAsync();
 
-            return Result<IEnumerable<CategoryEntity>>.Success(categories);
+            return categories;
         }
 
-        public async Task<Result<CategoryEntity>> GetCategoryByIdAsync(Guid id)
+        public async Task<CategoryEntity?> GetCategoryByIdAsync(Guid id)
         {
             var category = await _dbContext.Categories.FirstAsync(c => c.Id == id);
             if (category == null)
-                return Result<CategoryEntity>.Failure("category do not found");
+                return null;
 
-            return Result<CategoryEntity>.Success(category);
+            return category;
         }
 
-        public async Task<Result> UpdateCategoryAsync(CategoryEntity category, CategoryEntity categoryNewData)
+        public async Task<bool> UpdateCategoryAsync(CategoryEntity category, CategoryEntity categoryNewData)
         {
             var categoryToUpdate = await _dbContext.Categories.FirstAsync(c => c.Id == category.Id);
             if (categoryToUpdate == null)
-                return Result.Failure("category do not found");
+                return false;
             
             categoryToUpdate.Title = category.Title;
 
             _dbContext.Categories.Update(categoryToUpdate);
             await _dbContext.SaveChangesAsync();
 
-            return Result.Success();
+            return true;
         }
     }
 }

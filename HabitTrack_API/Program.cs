@@ -22,9 +22,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<HabitTrackDBContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("UserDatabase"));
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("UserDatabase")));
 
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("AppSettings"));
@@ -63,6 +61,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    builder.Configuration.AddUserSecrets<Program>();
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
@@ -77,3 +76,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+    

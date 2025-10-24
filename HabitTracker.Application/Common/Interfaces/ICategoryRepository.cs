@@ -10,11 +10,11 @@ namespace HabitTracker.Application.Common.Interfaces
 {
     public interface ICategoryRepository
     {
-        Task<Result<CategoryEntity>> GetCategoryByIdAsync(Guid id);
-        Task<Result<IEnumerable<CategoryEntity>>> GetCategoriesByUserIdAsync(Guid userId);
-        Task<Result<CategoryEntity>> AddCategoryAsync(CategoryEntity category);
-        Task<Result> UpdateCategoryAsync(CategoryEntity category, CategoryEntity categoryNewData);
-        Task<Result> DeleteCategoryAsync(Guid id);
-        Result ExistByTitleAsync(Guid userId, string title);
+        Task<CategoryEntity?> GetCategoryByIdAsync(Guid id);
+        Task<IEnumerable<CategoryEntity>> GetCategoriesByUserIdAsync(Guid userId);
+        Task<CategoryEntity> AddCategoryAsync(CategoryEntity category);
+        Task<bool> UpdateCategoryAsync(CategoryEntity category, CategoryEntity categoryNewData);
+        Task<bool> DeleteCategoryAsync(Guid id);
+        bool ExistByTitleAsync(Guid userId, string title);
     }
 }

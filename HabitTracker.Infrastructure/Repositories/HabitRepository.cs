@@ -19,11 +19,10 @@ namespace HabitTracker.Infrastructure.Repositories
             _habitTrackDbContext = habitTrackDBContext;
         }
 
-        public async Task<Result> AddAsync(HabitEntity habit)
+        public async Task AddAsync(HabitEntity habit)
         {
             await _habitTrackDbContext.Habits.AddAsync(habit);
             await _habitTrackDbContext.SaveChangesAsync();
-            return Result.Success();
         }
 
         public async Task<bool> DeleteAsync(Guid id)
@@ -39,13 +38,16 @@ namespace HabitTracker.Infrastructure.Repositories
             return rowsAffected > 0;
         }
 
-        public async Task<Result<HabitEntity?>> GetByIdAsync(Guid id)
+        public async Task<HabitEntity?> GetByIdAsync(Guid id)
         {
             var result =  await _habitTrackDbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
-            return Result<HabitEntity>.Success(result);
+            if (result == null)
+                return null;
+
+            return result;
         }
 
-        public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsByCategoryIdAsync(Guid categoryId, Guid userId)
+        public async Task<IEnumerable<HabitEntity>> GetHabitsByCategoryIdAsync(Guid categoryId, Guid userId)
         {
             var habits = await _habitTrackDbContext.Habits.
                 Where(h => h.CategoryId == categoryId &&
@@ -53,12 +55,12 @@ namespace HabitTracker.Infrastructure.Repositories
                 ToListAsync();
 
             if (!habits.Any())
-                return Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
+                return new List<HabitEntity>();
 
-            return Result<IEnumerable<HabitEntity>>.Success(habits);
+            return habits;
         }
 
-        public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsAsync(Guid userId, Priority? priority = null)
+        public async Task<IEnumerable<HabitEntity>> GetHabitsAsync(Guid userId, Priority? priority = null)
         {
             var query = _habitTrackDbContext.Habits
                 .Where(h => h.UserId == userId && !h.IsDeleted);
@@ -66,13 +68,17 @@ namespace HabitTracker.Infrastructure.Repositories
             if (priority.HasValue)
                 query.Where(h => h.Priority == priority.Value);
 
-            return Result<IEnumerable<HabitEntity>>.Success(await query.ToListAsync());
+            return await query.ToListAsync();
         }
 
-        public async Task<Result<List<HabitEntity>>> GetHabitsByUserIdAsync(Guid userId)
+        public async Task<List<HabitEntity>> GetHabitsByUserIdAsync(Guid userId)
         {
             var habits = await _habitTrackDbContext.Habits.Where(x => x.UserId == userId).ToListAsync();
-            return Result<List<HabitEntity>>.Success(habits);
+            
+            if(!habits.Any())
+                return new List<HabitEntity>();
+
+            return habits;
         }
 
         public async Task<bool> UpdateAsync(HabitEntity habit)
