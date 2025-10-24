@@ -2,8 +2,10 @@
 
 using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
+using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
+using HabitTracker.Application.Services;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -11,25 +13,24 @@ namespace HabitTracker.Application.UseCases.Habits
     {
         private readonly IHabitRepository _habitRepository;
         private readonly IUserContextService _userContextService;
+        private readonly IHabitLogRepository _habitLogRepository;
 
-        public HabitServices(IHabitRepository habitRepository, IUserContextService userContextService)
+        public HabitServices(IHabitRepository habitRepository, IUserContextService userContextService, IHabitLogRepository habitLogRepository)
         {
             _habitRepository = habitRepository;
             _userContextService = userContextService;
+            _habitLogRepository = habitLogRepository;
         }
 
-        public async Task<HabitEntity> AddNewHabitAsync(HabitDTO habitDto)
+        public async Task<Result<HabitEntity>> AddNewHabitAsync(HabitDTO habitDto)
         {
             if (string.IsNullOrEmpty(habitDto.Title))
-                throw new ValidationException("Title is required.");
+                return Result<HabitEntity>.Failure("Title can not be empty");
 
             if (habitDto.Title.Length > 100)
-                throw new ValidationException("Title can not exceed 100 characters.");
+                return Result<HabitEntity>.Failure("Title can not exceed 100 characters.");
 
             var userId = _userContextService.GetCurrentUserId();
-
-            if (userId == Guid.Empty)
-                throw new UnauthorizedAccessException("Invalid user context.");
 
             HabitEntity habit = new HabitEntity
             {
@@ -40,47 +41,70 @@ namespace HabitTracker.Application.UseCases.Habits
             };
 
             await _habitRepository.AddAsync(habit);
-            return habit;
+            return Result<HabitEntity>.Success(habit);
         }
 
-        public async Task<HabitEntity> GetHabitByIdAsync(Guid habitId)
+        public async Task<Result> MarkHabitAsDone(Guid habitId)
         {
-            var userId = _userContextService.GetCurrentUserId();
-
             var habit = await _habitRepository.GetByIdAsync(habitId);
-            if (habit == null || habit.UserId != userId)
-                throw new KeyNotFoundException("habit not found");
-            return habit;
+            if (habit == null)
+                return Result.Failure("Habit not found");
+
+            habit.Value?.MarkHabitAsDone();
+            await _habitRepository.UpdateAsync(habit.Value);
+
+            var log = new HabitLog(habit.Value.Id, DateTime.UtcNow, true );
+            await _habitLogRepository.AddAsync(log);
+            return Result.Success();
         }
 
-        public async Task<List<HabitEntity>> GetHabitsByUserIdAsync()
+        public async Task<Result> RemoveHabitAsync(HabitEntity habit)
         {
-            var userId = _userContextService.GetCurrentUserId();
-            return await _habitRepository.GetHabitsByUserIdAsync(userId);
+            var responde = await _habitRepository.DeleteAsync(habit.Id);
+            if (!responde)
+                return Result.Failure("Couln´t delet this habit");
+            
+            return Result.Success();
         }
 
-        public async Task RemoveHabitAsync(HabitEntity habit)
+        public async Task<Result> UndoHabitCompletion(Guid habitId)
         {
-            await _habitRepository.DeleteAsync(habit.Id);
+            var habit = await _habitRepository.GetByIdAsync(habitId);
+            if (habit == null)
+                return Result.Failure("Habit not found");
+
+            habit.Value?.UndoCompletion();
+            var result = await _habitRepository.UpdateAsync(habit.Value);
+            if(!result)
+                return Result.Failure("Could not update this habit");
+
+            return Result.Success();
         }
 
-        public async Task<HabitEntity?> UpdateHabit(Guid habitId, HabitDTO habitDto)
+        public async Task<Result<HabitEntity?>> UpdateHabit(Guid habitId, HabitDTO habitDto)
         {
             var userId = _userContextService.GetCurrentUserId();
 
             var existingHabit = await _habitRepository.GetByIdAsync(habitId);
 
             if (existingHabit == null)
-                throw new KeyNotFoundException();
+                return Result<HabitEntity?>.Failure("Habit not found");
 
-            if (existingHabit.UserId != userId)
-                throw new UnauthorizedAccessException();
+            if (existingHabit.Value.UserId != userId)
+                return Result<HabitEntity?>.Failure("Not authorize to do this operation");
 
-            existingHabit.Title = habitDto.Title;
-            existingHabit.Description = habitDto.Description;
-            await _habitRepository.UpdateAsync(existingHabit);
+            existingHabit.Value.Title = habitDto.Title;
+            existingHabit.Value.Description = habitDto.Description;
+            existingHabit.Value.Priority = habitDto.Priority;
+            existingHabit.Value.Duration = habitDto.Duration;
+            existingHabit.Value.RepeatInterval = habitDto.RepeatInterval;
+            existingHabit.Value.Category = habitDto.Category;
+            
+            var result = await _habitRepository.UpdateAsync(existingHabit.Value);
 
-            return existingHabit;
+            return result ? 
+                Result<HabitEntity?>.Success(existingHabit.Value) :
+                Result<HabitEntity?>.Failure("Could not update");
         }
     }
 }

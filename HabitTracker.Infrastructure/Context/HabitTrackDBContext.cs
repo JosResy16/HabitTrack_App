@@ -8,5 +8,6 @@ namespace HabitTracker.Infrastructure.Context
         public DbSet<UserEntity> Users { get; set; }
         public DbSet<HabitEntity> Habits { get; set; }
         public DbSet<CategoryEntity> Categories { get; set; }
+        public DbSet<HabitLog> Logs { get; set; }
     } 
 }

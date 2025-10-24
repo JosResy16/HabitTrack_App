@@ -1,6 +1,7 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
 using HabitTracker.Application.UseCases.Habits;
+using HabitTracker.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTrack_API.Controllers
@@ -10,20 +11,22 @@ namespace HabitTrack_API.Controllers
     public class HabitController : Controller
     {
         private readonly IHabitsService _habitService;
+        private readonly IHabitQueryService _habitQueryService;
         private readonly IUserContextService _userContextService;
 
-        public HabitController(IHabitsService habitsService, IUserContextService userContextService)
+        public HabitController(IHabitsService habitsService, IHabitQueryService habitQueryService ,IUserContextService userContextService)
         {
             _habitService = habitsService;
+            _habitQueryService = habitQueryService;
             _userContextService = userContextService;
         }
 
         [HttpGet("me/habits")]
         public async Task<IActionResult> GetUserHabits()
         {
-            var habits = await _habitService.GetHabitsByUserIdAsync();
+            var habits = await _habitQueryService.GetHabitsAsync();
 
-            if (habits == null || habits.Count == 0)
+            if (habits == null || habits.Value.Any<HabitEntity>())
                 return NoContent();
 
             return Ok(habits);
@@ -32,7 +35,7 @@ namespace HabitTrack_API.Controllers
         [HttpGet("{habitId}")]
         public async Task<IActionResult> GetHabitById(Guid habitId)
         {
-            var habit = await _habitService.GetHabitByIdAsync(habitId);
+            var habit = await _habitQueryService.GetHabitByIdAsync(habitId);
             return Ok(habit);
         }
 
@@ -43,11 +46,11 @@ namespace HabitTrack_API.Controllers
 
             var response = new HabitDTO()
             {
-                Title = habit.Title,
-                Description = habit.Description
+                Title = habit.Value.Title,
+                Description = habit.Value.Description
             };
 
-            return CreatedAtAction(nameof(GetHabitById), new {habitId = habit.Id}, response);
+            return CreatedAtAction(nameof(GetHabitById), new {habitId = habit.Value.Id}, response);
         }
 
         [HttpPut("update/{habitId}")]
@@ -61,12 +64,12 @@ namespace HabitTrack_API.Controllers
         [HttpDelete("{habitId}")]
         public async Task<IActionResult> RemoveHabitAsync(Guid habitId)
         {
-            var habit = await _habitService.GetHabitByIdAsync(habitId);
+            var habit = await _habitQueryService.GetHabitByIdAsync(habitId);
 
             if (habit == null)
                 return NotFound();
 
-            await _habitService.RemoveHabitAsync(habit);
+            await _habitService.RemoveHabitAsync(habit.Value);
             return Ok();
         }
     }

@@ -47,12 +47,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ITokenGenerator, JwtGenerator>();
-builder.Services.AddScoped<IHabitsService, HabitServices>();
 builder.Services.AddScoped<IHabitRepository, HabitRepository>();
+builder.Services.AddScoped<IHabitLogRepository, HabitLogRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenGenerator, JwtGenerator>();
 builder.Services.AddScoped<IUserContextService, UserContextService>();
+builder.Services.AddScoped<IHabitsService, HabitServices>();
+builder.Services.AddScoped<IHabitQueryService, HabitQueryService>();
 
 var app = builder.Build();
 

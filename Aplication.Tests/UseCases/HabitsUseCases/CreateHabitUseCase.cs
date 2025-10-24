@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
+using HabitTracker.Application.Services;
 using HabitTracker.Application.UseCases.Habits;
 using HabitTracker.Domain.Entities;
 using Moq;
@@ -13,6 +14,7 @@ namespace Aplication.Tests.UseCases.Habits
     {
         private Mock<IHabitRepository> _habitRepositoryMock = null;
         private Mock<IUserContextService> _userContextServiceMock = null;
+        private Mock<IHabitLogRepository> _habitLogRepository = null;
         private HabitServices _habitService = null;
 
         [SetUp]
@@ -20,7 +22,8 @@ namespace Aplication.Tests.UseCases.Habits
         {
             _habitRepositoryMock = new Mock<IHabitRepository>();
             _userContextServiceMock = new Mock<IUserContextService>();
-            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object);
+            _habitLogRepository = new Mock<IHabitLogRepository>();
+            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object, _habitLogRepository.Object);
         }
 
         [Test]
@@ -35,16 +38,19 @@ namespace Aplication.Tests.UseCases.Habits
 
             HabitEntity? habitSaved = null;
 
-            _habitRepositoryMock.Setup(x => x.AddAsync(It.IsAny<HabitEntity>()))
+            _habitRepositoryMock
+                .Setup(x => x.AddAsync(It.IsAny<HabitEntity>()))
                 .Callback<HabitEntity>(h => habitSaved = h)
-                .Returns(Task.CompletedTask);
+                .ReturnsAsync((HabitEntity h) => Result.Success());
 
             var result = await _habitService.AddNewHabitAsync(habitDto);
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(userId, result.UserId);
-            Assert.AreEqual(title, result.Title);
-            Assert.AreEqual(description, result.Description);
+            Assert.IsTrue(result.IsSuccess, $"Expected operation to succeed but got error: {result.ErrorMessage}");
+            Assert.IsNotNull(result.Value, "Expected a HabitEntity value when operation succeeds");
+
+            Assert.AreEqual(userId, result.Value.UserId);
+            Assert.AreEqual(title, result.Value.Title);
+            Assert.AreEqual(description, result.Value.Description);
             Assert.IsNotNull(habitSaved);
 
             _habitRepositoryMock.Verify(r => r.AddAsync(It.IsAny<HabitEntity>()), Times.Once);
