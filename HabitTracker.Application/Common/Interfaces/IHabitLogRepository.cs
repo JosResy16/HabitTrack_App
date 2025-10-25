@@ -6,9 +6,9 @@ namespace HabitTracker.Application.Common.Interfaces
 {
     public interface IHabitLogRepository
     {
-        Task<Result> AddAsync(HabitLog log);
-        Task<Result<IEnumerable<HabitLog>>> GetLogsByHabitIdAsync(Guid habitId);
-        Task<Result<IEnumerable<HabitLog>>> GetLogsByUserIdAsync(Guid userId);
-        Task<Result<IEnumerable<HabitLog>>> GetLogsByDateAsync(Guid userId, DateTime date);
+        Task AddAsync(HabitLog log);
+        Task<IEnumerable<HabitLog>> GetLogsByHabitIdAsync(Guid habitId);
+        Task<IEnumerable<HabitLog>> GetLogsByUserIdAsync(Guid userId);
+        Task<IEnumerable<HabitLog>> GetLogsByDateAsync(Guid userId, DateTime date);
     }
 }

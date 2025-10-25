@@ -20,40 +20,36 @@ namespace HabitTracker.Infrastructure.Repositories
             _DbContext = dbContext;
         }
 
-        public async Task<Result> AddAsync(HabitLog log)
+        public async Task AddAsync(HabitLog log)
         {
             await _DbContext.Logs.AddAsync(log);
             await _DbContext.SaveChangesAsync();
-            return Result.Success();
         }
 
-        public async Task<Result<IEnumerable<HabitLog>>> GetLogsByDateAsync(Guid userId, DateTime date)
+        public async Task<IEnumerable<HabitLog>> GetLogsByDateAsync(Guid userId, DateTime date)
         {
             var list = await _DbContext.Logs
                 .Include(l => l.Habit)
                 .Where(l => l.Habit.UserId == userId && l.Date.Date == date.Date)
                 .ToListAsync();
-
-            return Result<IEnumerable<HabitLog>>.Success(list);
+            return list;
         }
 
-        public async Task<Result<IEnumerable<HabitLog>>> GetLogsByHabitIdAsync(Guid habitId)
+        public async Task<IEnumerable<HabitLog>> GetLogsByHabitIdAsync(Guid habitId)
         {
-            return Result<IEnumerable<HabitLog>>.Success(
-                await _DbContext.Logs
+            return await _DbContext.Logs
                 .Where(l => l.HabitId == habitId)
                 .OrderByDescending(l => l.Date)
-                .ToListAsync());
+                .ToListAsync();
         }
 
-        public async Task<Result<IEnumerable<HabitLog>>> GetLogsByUserIdAsync(Guid userId)
+        public async Task<IEnumerable<HabitLog>> GetLogsByUserIdAsync(Guid userId)
         {
-            return Result<IEnumerable<HabitLog>>.Success(
-                await _DbContext.Logs
+            return await _DbContext.Logs
                 .Include(l => l.Habit)
                 .Where(l => l.Habit.UserId == userId)
                 .OrderByDescending(l => l.Date)
-                .ToListAsync());
+                .ToListAsync();
         }
     }
 }
