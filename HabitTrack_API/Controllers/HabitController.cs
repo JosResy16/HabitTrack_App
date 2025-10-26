@@ -1,24 +1,25 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
 using HabitTracker.Application.UseCases.Habits;
+using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTrack_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class HabitController : Controller
+    [Authorize]
+    public class HabitController : ControllerBase
     {
         private readonly IHabitsService _habitService;
         private readonly IHabitQueryService _habitQueryService;
-        private readonly IUserContextService _userContextService;
 
-        public HabitController(IHabitsService habitsService, IHabitQueryService habitQueryService ,IUserContextService userContextService)
+        public HabitController(IHabitsService habitsService, IHabitQueryService habitQueryService)
         {
             _habitService = habitsService;
             _habitQueryService = habitQueryService;
-            _userContextService = userContextService;
         }
 
         [HttpGet("me/habits")]
@@ -26,7 +27,7 @@ namespace HabitTrack_API.Controllers
         {
             var habits = await _habitQueryService.GetHabitsAsync();
 
-            if (habits == null || habits.Value.Any<HabitEntity>())
+            if (!habits.IsSuccess || !habits.Value.Any())
                 return NoContent();
 
             return Ok(habits);
@@ -36,6 +37,9 @@ namespace HabitTrack_API.Controllers
         public async Task<IActionResult> GetHabitById(Guid habitId)
         {
             var habit = await _habitQueryService.GetHabitByIdAsync(habitId);
+            if (!habit.IsSuccess)
+                return NoContent();
+
             return Ok(habit);
         }
 
@@ -44,21 +48,48 @@ namespace HabitTrack_API.Controllers
         {
             var habit = await _habitService.AddNewHabitAsync(habitDto);
 
+            if (!habit.IsSuccess)
+                return BadRequest(habit.ErrorMessage);
+
             var response = new HabitDTO()
             {
                 Title = habit.Value.Title,
                 Description = habit.Value.Description
             };
 
-            return CreatedAtAction(nameof(GetHabitById), new {habitId = habit.Value.Id}, response);
+            return CreatedAtAction(nameof(GetHabitById), new { habitId = habit.Value.Id }, response);
         }
 
-        [HttpPut("update/{habitId}")]
+        [HttpPut("{habitId}")]
         public async Task<IActionResult> UpdateAnExistingHabit([FromBody] HabitDTO habitDto, Guid habitId)
         {
             var updateHabit = await _habitService.UpdateHabit(habitId, habitDto);
 
-            return Ok(updateHabit);
+            if (!updateHabit.IsSuccess)
+                return BadRequest(updateHabit.ErrorMessage);
+
+            return Ok(updateHabit.Value);
+        }
+
+        [HttpPost("{habitId}/done")]
+        public async Task<IActionResult> MarkHabitAsDone(Guid habitId)
+        {
+            var response = await _habitService.MarkHabitAsDone(habitId);
+
+            if (!response.IsSucces)
+                return BadRequest(response.ErrorMessage);
+
+            return Ok(response.IsSucces);
+        }
+
+        [HttpDelete("{habitId}/done")]
+        public async Task<IActionResult> UndoHabitCompletion(Guid habitId)
+        {
+            var response = await _habitService.UndoHabitCompletion(habitId);
+            if (!response.IsSucces)
+                return BadRequest(response.ErrorMessage);
+
+            return Ok(response.IsSucces);
         }
 
         [HttpDelete("{habitId}")]
@@ -66,11 +97,51 @@ namespace HabitTrack_API.Controllers
         {
             var habit = await _habitQueryService.GetHabitByIdAsync(habitId);
 
-            if (habit == null)
-                return NotFound();
+            if (!habit.IsSuccess)
+                return BadRequest();
 
-            await _habitService.RemoveHabitAsync(habit.Value);
-            return Ok();
+            if (habit.Value != null)
+                await _habitService.RemoveHabitAsync(habit.Value);
+
+            return Ok(habit.Value);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetHabitsByPriority([FromQuery] Priority? priority = null)
+        {
+            var habits = await _habitQueryService.GetHabitsByPriorityAsync(priority);
+
+            if (!habits.IsSuccess || !habits.Value.Any())
+                return NoContent();
+
+            return Ok(habits.Value);
+        }
+
+        [HttpGet("category/{categoryId}")]
+        public async Task<IActionResult> GetHabitsByCategory(Guid categoryId)
+        {
+            var habits = await _habitQueryService.GetHabitsByCategoryAsync(categoryId);
+            if (!habits.IsSuccess || !habits.Value.Any())
+                return NoContent();
+            return Ok(habits.Value);
+        }
+
+        [HttpGet("today")]
+        public async Task<IActionResult> GetTodaysHabit([FromBody] DateTime? day = null)
+        {
+            var habits = await _habitQueryService.GetTodayHabitsAsync(day ?? DateTime.UtcNow);
+            if (!habits.IsSuccess || !habits.Value.Any())
+                return NoContent();
+            return Ok(habits.Value);
+        }
+
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHabitHistory()
+        {
+            var habits = await _habitQueryService.GetHabitHistoryAsync();
+            if (!habits.IsSuccess || !habits.Value.Any())
+                return NoContent();
+            return Ok(habits.Value);
         }
     }
 }
