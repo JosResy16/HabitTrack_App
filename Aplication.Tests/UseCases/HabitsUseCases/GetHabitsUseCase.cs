@@ -11,9 +11,9 @@ namespace Aplication.Tests.UseCases.HabitsUseCases
 {
     internal class GetHabitsUseCase
     {
-        private Mock<IHabitRepository> _habitRepositoryMock = null;
-        private Mock<IUserContextService> _userContextServiceMock = null;
-        private HabitQueryService _habitQueryService = null;
+        private Mock<IHabitRepository> _habitRepositoryMock;
+        private Mock<IUserContextService> _userContextServiceMock;
+        private HabitQueryService _habitQueryService;
 
         [SetUp]
         public void SetUp()
@@ -30,8 +30,8 @@ namespace Aplication.Tests.UseCases.HabitsUseCases
             var habitId = Guid.NewGuid();
             var habit = new HabitEntity {Id = habitId, Title = "Read", UserId = userId };
 
-            _habitRepositoryMock.Setup( r => r.GetByIdAsync(habitId))
-                .ReturnsAsync((HabitEntity h) => Result<HabitEntity>.Success(h));
+            _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId))
+                .ReturnsAsync(habit);
 
             _userContextServiceMock.Setup(u => u.GetCurrentUserId())
                 .Returns(userId);
@@ -39,7 +39,7 @@ namespace Aplication.Tests.UseCases.HabitsUseCases
             var result = await _habitQueryService.GetHabitByIdAsync(habitId);
 
             Assert.IsNotNull(result);
-            Assert.That(result.Value.Id, Is.EqualTo(habitId));
+            Assert.That(result.Value?.Id, Is.EqualTo(habitId));
             Assert.That(result.Value.UserId, Is.EqualTo(userId));
             Assert.That(result.Value.Title, Is.EqualTo("Read"));
         }
@@ -51,7 +51,7 @@ namespace Aplication.Tests.UseCases.HabitsUseCases
             var habitId = Guid.NewGuid();
 
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId))
-                .ReturnsAsync(Result<HabitEntity>.Failure("Habit not found"));
+                .ReturnsAsync((HabitEntity?) null);
 
             _userContextServiceMock.Setup(u => u.GetCurrentUserId())
                 .Returns(userId);

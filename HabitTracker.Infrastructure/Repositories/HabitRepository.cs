@@ -19,10 +19,11 @@ namespace HabitTracker.Infrastructure.Repositories
             _habitTrackDbContext = habitTrackDBContext;
         }
 
-        public async Task AddAsync(HabitEntity habit)
+        public async Task<bool> AddAsync(HabitEntity habit)
         {
             await _habitTrackDbContext.Habits.AddAsync(habit);
-            await _habitTrackDbContext.SaveChangesAsync();
+            var rowsAffected = await _habitTrackDbContext.SaveChangesAsync();
+            return rowsAffected > 0;
         }
 
         public async Task<bool> DeleteAsync(Guid id)

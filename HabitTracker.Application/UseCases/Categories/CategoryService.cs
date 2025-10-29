@@ -37,16 +37,16 @@ namespace HabitTracker.Application.UseCases.Categories
             var category = await _categoryRepository.GetCategoryByIdAsync(categoryId);
             var userId = _userContext.GetCurrentUserId();
 
-            if (category.Value?.UserId != userId)
+            if (category?.UserId != userId)
                 return Result.Failure("User not found/Not loged in");
 
-            if (category.Value.Id == Guid.Empty)
+            if (category.Id == Guid.Empty)
                 return Result.Failure("category not found");
 
 
-            var result = await _categoryRepository.DeleteCategoryAsync(category.Value.Id);
+            var result = await _categoryRepository.DeleteCategoryAsync(category.Id);
 
-            return result.IsSucces
+            return result
                 ? Result.Success()
                 : Result.Failure("Could not delete the category");
         }
@@ -56,10 +56,10 @@ namespace HabitTracker.Application.UseCases.Categories
             var userId = _userContext.GetCurrentUserId();
             var categories = await _categoryRepository.GetCategoriesByUserIdAsync(userId);
 
-            if (!categories.Value.Any())
+            if (!categories.Any())
                 Result.Failure("categories do not found");
 
-            return Result<IEnumerable<CategoryEntity>>.Success(categories.Value);
+            return Result<IEnumerable<CategoryEntity>>.Success(categories);
         }
 
         public async Task<Result> UpdateCategory(Guid categoryId, CategoryEntity category)
@@ -70,12 +70,12 @@ namespace HabitTracker.Application.UseCases.Categories
             if (categoryFromDb == null)
                 return Result.Failure("category do not found");
 
-            if (categoryFromDb.Value?.UserId != userId)
+            if (categoryFromDb?.UserId != userId)
                 return Result.Failure("category does not belong to this user");
 
-            var result = await _categoryRepository.UpdateCategoryAsync(categoryFromDb.Value, category);
+            var result = await _categoryRepository.UpdateCategoryAsync(categoryFromDb, category);
 
-            return result.IsSucces
+            return result
                 ? Result.Success()
                 : Result.Failure("Category could not be updated.");
         }

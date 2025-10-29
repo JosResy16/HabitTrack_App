@@ -23,12 +23,12 @@ namespace HabitTracker.Application.Services
 
     public class Result
     {
-        public bool IsSucces {  get; }
+        public bool IsSuccess {  get; }
         public string? ErrorMessage { get; }
 
         private Result(bool isSucces, string? errorMessage)
         {
-            IsSucces = isSucces;
+            IsSuccess = isSucces;
             ErrorMessage = errorMessage;
         }
 

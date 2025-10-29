@@ -12,10 +12,10 @@ namespace Aplication.Tests.UseCases.Habits
 {
     internal class CreateHabitUseCase
     {
-        private Mock<IHabitRepository> _habitRepositoryMock = null;
-        private Mock<IUserContextService> _userContextServiceMock = null;
-        private Mock<IHabitLogRepository> _habitLogRepository = null;
-        private HabitServices _habitService = null;
+        private Mock<IHabitRepository> _habitRepositoryMock;
+        private Mock<IUserContextService> _userContextServiceMock;
+        private Mock<IHabitLogRepository> _habitLogRepository;
+        private HabitServices _habitService;
 
         [SetUp]
         public void SetUp()
@@ -30,18 +30,14 @@ namespace Aplication.Tests.UseCases.Habits
         public async Task CreateHabitAsync_ShouldCreateHabitWithCorrectUserData()
         {
             var userId = Guid.NewGuid();
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-
             var title = "Wake up early";
             var description = "Wake up at 6 am every day";
+            var habit = new HabitEntity { Title = title, Description = description , UserId = userId};
             var habitDto = new HabitDTO { Title = title, Description = description };
 
-            HabitEntity? habitSaved = null;
-
-            _habitRepositoryMock
-                .Setup(x => x.AddAsync(It.IsAny<HabitEntity>()))
-                .Callback<HabitEntity>(h => habitSaved = h)
-                .ReturnsAsync((HabitEntity h) => Result.Success());
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _habitRepositoryMock.Setup(x => x.AddAsync(habit))
+                .ReturnsAsync(true);
 
             var result = await _habitService.AddNewHabitAsync(habitDto);
 
@@ -51,7 +47,6 @@ namespace Aplication.Tests.UseCases.Habits
             Assert.AreEqual(userId, result.Value.UserId);
             Assert.AreEqual(title, result.Value.Title);
             Assert.AreEqual(description, result.Value.Description);
-            Assert.IsNotNull(habitSaved);
 
             _habitRepositoryMock.Verify(r => r.AddAsync(It.IsAny<HabitEntity>()), Times.Once);
         }

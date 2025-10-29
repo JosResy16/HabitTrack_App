@@ -48,9 +48,9 @@ namespace HabitTrack_API.Controllers
         public async Task<IActionResult> RemoveCategoryAsync(Guid categoryId)
         {
             var response = await _categoryService.DeleteCategory(categoryId);
-            if (!response.IsSucces)
+            if (!response.IsSuccess)
                 return BadRequest(response.ErrorMessage);
-            return Ok(response.IsSucces);
+            return Ok(response.IsSuccess);
         }
 
         [HttpPut("{categoryId}")]
@@ -61,9 +61,9 @@ namespace HabitTrack_API.Controllers
                 Title = category.Title
             };
             var response = await _categoryService.UpdateCategory(categoryId, categoryEntity);
-            if (!response.IsSucces)
+            if (!response.IsSuccess)
                 return BadRequest(response.ErrorMessage);
-            return Ok(response.IsSucces);
+            return Ok(response.IsSuccess);
         }
 
     }

@@ -10,7 +10,7 @@ namespace HabitTracker.Application.Common.Interfaces
     {
         Task<HabitEntity?> GetByIdAsync(Guid id);
         Task<List<HabitEntity>> GetHabitsByUserIdAsync(Guid userId);
-        Task AddAsync(HabitEntity habit);
+        Task<bool> AddAsync(HabitEntity habit);
         Task<bool> UpdateAsync(HabitEntity habit);
         Task<bool> DeleteAsync(Guid id);
         Task<IEnumerable<HabitEntity>> GetHabitsByCategoryIdAsync(Guid categoryId, Guid userId);

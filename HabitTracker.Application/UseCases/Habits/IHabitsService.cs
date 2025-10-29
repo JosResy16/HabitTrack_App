@@ -11,7 +11,7 @@ namespace HabitTracker.Application.UseCases.Habits
     {
         Task<Result<HabitEntity>> AddNewHabitAsync(HabitDTO habit);
         Task<Result> RemoveHabitAsync(HabitEntity habit);        
-        Task<Result<HabitEntity?>> UpdateHabit(Guid habitId, HabitDTO habitDto);
+        Task<Result<HabitEntity?>> UpdateHabitAsync(Guid habitId, HabitDTO habitDto);
         Task<Result> MarkHabitAsDone(Guid habitId);
         Task<Result> UndoHabitCompletion(Guid habitId);
     }

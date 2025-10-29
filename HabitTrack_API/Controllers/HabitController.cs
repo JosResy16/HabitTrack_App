@@ -63,7 +63,7 @@ namespace HabitTrack_API.Controllers
         [HttpPut("{habitId}")]
         public async Task<IActionResult> UpdateAnExistingHabit([FromBody] HabitDTO habitDto, Guid habitId)
         {
-            var updateHabit = await _habitService.UpdateHabit(habitId, habitDto);
+            var updateHabit = await _habitService.UpdateHabitAsync(habitId, habitDto);
 
             if (!updateHabit.IsSuccess)
                 return BadRequest(updateHabit.ErrorMessage);
@@ -76,20 +76,20 @@ namespace HabitTrack_API.Controllers
         {
             var response = await _habitService.MarkHabitAsDone(habitId);
 
-            if (!response.IsSucces)
+            if (!response.IsSuccess)
                 return BadRequest(response.ErrorMessage);
 
-            return Ok(response.IsSucces);
+            return Ok(response.IsSuccess);
         }
 
         [HttpDelete("{habitId}/done")]
         public async Task<IActionResult> UndoHabitCompletion(Guid habitId)
         {
             var response = await _habitService.UndoHabitCompletion(habitId);
-            if (!response.IsSucces)
+            if (!response.IsSuccess)
                 return BadRequest(response.ErrorMessage);
 
-            return Ok(response.IsSucces);
+            return Ok(response.IsSuccess);
         }
 
         [HttpDelete("{habitId}")]

@@ -24,7 +24,7 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habits == null)
                 return Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
 
-            return Result<IEnumerable<HabitEntity>>.Success(habits.Value);
+            return Result<IEnumerable<HabitEntity>>.Success(habits);
         }
 
         public async Task<Result<HabitEntity>> GetHabitByIdAsync(Guid habitId)
@@ -32,9 +32,9 @@ namespace HabitTracker.Application.UseCases.Habits
             var userId = _userContextService.GetCurrentUserId();
 
             var habit = await _habitRepository.GetByIdAsync(habitId);
-            if (habit == null || habit.Value.UserId != userId)
+            if (habit == null || habit.UserId != userId)
                 throw new KeyNotFoundException("habit not found");
-            return Result<HabitEntity>.Success(habit.Value);
+            return Result<HabitEntity>.Success(habit);
         }
 
         public Task<Result<IEnumerable<HabitEntity>>> GetHabitHistoryAsync()
@@ -45,13 +45,27 @@ namespace HabitTracker.Application.UseCases.Habits
         public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsAsync(Priority? priority = null)
         {
             var userId = _userContextService.GetCurrentUserId();
-            return await _habitRepository.GetHabitsAsync(userId, priority);
+            var habits = await _habitRepository.GetHabitsAsync(userId, priority);
+            if (habits == null)
+                Result<IEnumerable<HabitEntity>>.Failure("habits not found");
+
+            if (!habits.Any())
+                Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
+
+            return Result<IEnumerable<HabitEntity>>.Success(habits);
         }
 
         public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsByPriorityAsync(Priority? priority = null)
         {
             var userId = _userContextService.GetCurrentUserId();
-            return await _habitRepository.GetHabitsAsync(userId, priority);
+            var habits = await _habitRepository.GetHabitsAsync(userId, priority);
+            if (habits == null)
+                Result<IEnumerable<HabitEntity>>.Failure("habits not found");
+
+            if (!habits.Any())
+                Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
+
+            return Result<IEnumerable<HabitEntity>>.Success(habits);
         }
 
         public Task<Result<IEnumerable<HabitEntity>>> GetTodayHabitsAsync(DateTime day)
