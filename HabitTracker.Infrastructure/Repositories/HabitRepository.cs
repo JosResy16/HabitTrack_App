@@ -28,7 +28,8 @@ namespace HabitTracker.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(Guid id)
         {
-            var habit = await _habitTrackDbContext.Habits.FindAsync(id);
+            var habit = await _habitTrackDbContext.Habits.FirstOrDefaultAsync(
+                h => h.Id == id && !h.IsDeleted);
             if (habit == null)
                 return false;
 
@@ -41,7 +42,7 @@ namespace HabitTracker.Infrastructure.Repositories
 
         public async Task<HabitEntity?> GetByIdAsync(Guid id)
         {
-            var result =  await _habitTrackDbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+            var result =  await _habitTrackDbContext.Habits.FirstOrDefaultAsync(h => h.Id == id && !h.IsDeleted);
             if (result == null)
                 return null;
 
@@ -52,7 +53,7 @@ namespace HabitTracker.Infrastructure.Repositories
         {
             var habits = await _habitTrackDbContext.Habits.
                 Where(h => h.CategoryId == categoryId &&
-                h.UserId == userId).
+                h.UserId == userId && !h.IsDeleted).
                 ToListAsync();
 
             if (!habits.Any())
@@ -74,7 +75,7 @@ namespace HabitTracker.Infrastructure.Repositories
 
         public async Task<List<HabitEntity>> GetHabitsByUserIdAsync(Guid userId)
         {
-            var habits = await _habitTrackDbContext.Habits.Where(x => x.UserId == userId).ToListAsync();
+            var habits = await _habitTrackDbContext.Habits.Where(x => x.UserId == userId && !x.IsDeleted).ToListAsync();
             
             if(!habits.Any())
                 return new List<HabitEntity>();
@@ -88,5 +89,16 @@ namespace HabitTracker.Infrastructure.Repositories
             var rowsAffected = await _habitTrackDbContext.SaveChangesAsync();
             return rowsAffected > 0 ;
         }
+
+        public async Task<HabitEntity?> GetByTitleAsync(Guid userId, string title)
+        {
+            var habit = await _habitTrackDbContext.Habits.FirstOrDefaultAsync(
+                x => x.UserId == userId && x.Title == title && !x.IsDeleted);
+            if(habit == null)
+                return null;
+
+            return habit;
+        }
+
     }
 }

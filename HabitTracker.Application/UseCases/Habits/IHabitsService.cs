@@ -9,9 +9,9 @@ namespace HabitTracker.Application.UseCases.Habits
 {
     public interface IHabitsService
     {
-        Task<Result<HabitEntity>> AddNewHabitAsync(HabitDTO habit);
-        Task<Result> RemoveHabitAsync(HabitEntity habit);        
-        Task<Result<HabitEntity?>> UpdateHabitAsync(Guid habitId, HabitDTO habitDto);
+        Task<Result<HabitResponseDTO>> AddNewHabitAsync(CreateHabitDTO habit);
+        Task<Result> RemoveHabitAsync(Guid habitId);        
+        Task<Result<HabitResponseDTO?>> UpdateHabitAsync(Guid habitId, CreateHabitDTO habitDto);
         Task<Result> MarkHabitAsDone(Guid habitId);
         Task<Result> UndoHabitCompletion(Guid habitId);
     }

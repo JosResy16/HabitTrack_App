@@ -43,25 +43,24 @@ namespace HabitTrack_API.Controllers
             return Ok(habit);
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateNewHabit([FromBody] HabitDTO habitDto)
+        [HttpPost]
+        [ProducesResponseType(typeof(CreateHabitDTO), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreateNewHabit([FromBody] CreateHabitDTO habitDto)
         {
-            var habit = await _habitService.AddNewHabitAsync(habitDto);
+            if (habitDto == null)
+                return BadRequest("Habit data is required.");
 
-            if (!habit.IsSuccess)
-                return BadRequest(habit.ErrorMessage);
+            var result = await _habitService.AddNewHabitAsync(habitDto);
 
-            var response = new HabitDTO()
-            {
-                Title = habit.Value.Title,
-                Description = habit.Value.Description
-            };
+            if (!result.IsSuccess)
+                return BadRequest(result.ErrorMessage);
 
-            return CreatedAtAction(nameof(GetHabitById), new { habitId = habit.Value.Id }, response);
+            return CreatedAtAction(nameof(GetHabitById), new { habitId = result.Value?.Id }, result.Value);
         }
 
         [HttpPut("{habitId}")]
-        public async Task<IActionResult> UpdateAnExistingHabit([FromBody] HabitDTO habitDto, Guid habitId)
+        public async Task<IActionResult> UpdateAnExistingHabit([FromBody] CreateHabitDTO habitDto, Guid habitId)
         {
             var updateHabit = await _habitService.UpdateHabitAsync(habitId, habitDto);
 
@@ -95,15 +94,11 @@ namespace HabitTrack_API.Controllers
         [HttpDelete("{habitId}")]
         public async Task<IActionResult> RemoveHabitAsync(Guid habitId)
         {
-            var habit = await _habitQueryService.GetHabitByIdAsync(habitId);
+            var response = await _habitService.RemoveHabitAsync(habitId);
+            if (!response.IsSuccess)
+                return BadRequest(response.ErrorMessage);
 
-            if (!habit.IsSuccess)
-                return BadRequest();
-
-            if (habit.Value != null)
-                await _habitService.RemoveHabitAsync(habit.Value);
-
-            return Ok(habit.Value);
+            return Ok(response.IsSuccess);
         }
 
         [HttpGet]

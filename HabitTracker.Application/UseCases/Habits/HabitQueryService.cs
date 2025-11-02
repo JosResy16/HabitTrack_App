@@ -1,4 +1,5 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
+using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
@@ -9,11 +10,13 @@ namespace HabitTracker.Application.UseCases.Habits
     {
         private readonly IHabitRepository _habitRepository;
         private readonly IUserContextService _userContextService;
+        private readonly IHabitLogRepository _habitLogRepository;
 
-        public HabitQueryService(IHabitRepository habitRepository, IUserContextService userContext)
+        public HabitQueryService(IHabitRepository habitRepository, IUserContextService userContext, IHabitLogRepository habitLogRepository)
         {
             _habitRepository = habitRepository;
             _userContextService = userContext;
+            _habitLogRepository = habitLogRepository;
         }
 
         public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsByCategoryAsync(Guid categoryId)
@@ -32,22 +35,44 @@ namespace HabitTracker.Application.UseCases.Habits
             var userId = _userContextService.GetCurrentUserId();
 
             var habit = await _habitRepository.GetByIdAsync(habitId);
-            if (habit == null || habit.UserId != userId)
-                throw new KeyNotFoundException("habit not found");
+            if (habit == null)
+                return Result<HabitEntity>.Failure("Habit not found");
+
+            if (habit.UserId != userId)
+                return Result<HabitEntity>.Failure("Not authorize");
+
             return Result<HabitEntity>.Success(habit);
         }
 
-        public Task<Result<IEnumerable<HabitEntity>>> GetHabitHistoryAsync()
+        public async Task<Result<IEnumerable<HabitHistoryDTO>>> GetHabitHistoryAsync(Guid habitId)
         {
-            throw new NotImplementedException();
+            var userId = _userContextService.GetCurrentUserId();
+            var habit = await _habitRepository.GetByIdAsync(habitId);
+
+            if (habit == null)
+                return Result<IEnumerable<HabitHistoryDTO>>.Failure("Habit not found");
+
+            if (habit.UserId != userId)
+                return Result<IEnumerable<HabitHistoryDTO>>.Failure("Not authorized");
+
+            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(habitId);
+
+            var history = logs
+                .OrderByDescending(l => l.Date)
+                .Select(l => new HabitHistoryDTO
+                {
+                    Date = l.Date,
+                    IsCompleted = l.IsCompleted
+                })
+                .ToList();
+
+            return Result<IEnumerable<HabitHistoryDTO>>.Success(history);
         }
 
         public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsAsync(Priority? priority = null)
         {
             var userId = _userContextService.GetCurrentUserId();
             var habits = await _habitRepository.GetHabitsAsync(userId, priority);
-            if (habits == null)
-                Result<IEnumerable<HabitEntity>>.Failure("habits not found");
 
             if (!habits.Any())
                 Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
@@ -59,8 +84,6 @@ namespace HabitTracker.Application.UseCases.Habits
         {
             var userId = _userContextService.GetCurrentUserId();
             var habits = await _habitRepository.GetHabitsAsync(userId, priority);
-            if (habits == null)
-                Result<IEnumerable<HabitEntity>>.Failure("habits not found");
 
             if (!habits.Any())
                 Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
@@ -68,9 +91,31 @@ namespace HabitTracker.Application.UseCases.Habits
             return Result<IEnumerable<HabitEntity>>.Success(habits);
         }
 
-        public Task<Result<IEnumerable<HabitEntity>>> GetTodayHabitsAsync(DateTime day)
+        public async Task<Result<IEnumerable<HabitTodayDTO>>> GetTodayHabitsAsync(DateTime day)
         {
-            throw new NotImplementedException();
+            var userId = _userContextService.GetCurrentUserId();
+            var habits = await _habitRepository.GetHabitsByUserIdAsync(userId);
+            var todayLogs = await _habitLogRepository.GetLogsByDateAsync(userId, day);
+
+            if (!habits.Any())
+                return Result<IEnumerable<HabitTodayDTO>>.Failure("Any habit found");
+
+            var todayHabits = habits.Select(habit =>
+            {
+                var log = todayLogs.FirstOrDefault(l => l.HabitId == habit.Id);
+                return new HabitTodayDTO
+                {
+                    Id = habit.Id,
+                    Title = habit.Title,
+                    Description = habit.Description,
+                    CategoryId = habit.CategoryId,
+                    Priority = habit.Priority,
+                    IsCompletedToday = log?.IsCompleted ?? false,
+                    LastTimeDoneAt = habit.LastTimeDoneAt
+                };
+            }).ToList();
+
+            return Result<IEnumerable<HabitTodayDTO>>.Success(todayHabits);
         }
     }
 }

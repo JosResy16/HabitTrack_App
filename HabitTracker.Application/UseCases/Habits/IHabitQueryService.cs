@@ -1,6 +1,7 @@
 ﻿using HabitTracker.Application.Services;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
+using HabitTracker.Application.DTOs;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -10,7 +11,7 @@ namespace HabitTracker.Application.UseCases.Habits
         Task<Result<IEnumerable<HabitEntity>>> GetHabitsAsync(Priority? priority = null);
         Task<Result<IEnumerable<HabitEntity>>> GetHabitsByPriorityAsync(Priority? priority = null);
         Task<Result<IEnumerable<HabitEntity>>> GetHabitsByCategoryAsync(Guid categoryId);
-        Task<Result<IEnumerable<HabitEntity>>> GetTodayHabitsAsync(DateTime day);
-        Task<Result<IEnumerable<HabitEntity>>> GetHabitHistoryAsync();
+        Task<Result<IEnumerable<HabitTodayDTO>>> GetTodayHabitsAsync(DateTime day);
+        Task<Result<IEnumerable<HabitHistoryDTO>>> GetHabitHistoryAsync(Guid habitId);
     }
 }

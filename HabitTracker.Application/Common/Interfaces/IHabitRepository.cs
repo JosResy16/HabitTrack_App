@@ -1,7 +1,7 @@
-﻿using HabitTracker.Application.DTOs;
+﻿
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
-using HabitTracker.Application.Services;
+
 
 
 namespace HabitTracker.Application.Common.Interfaces
@@ -15,5 +15,6 @@ namespace HabitTracker.Application.Common.Interfaces
         Task<bool> DeleteAsync(Guid id);
         Task<IEnumerable<HabitEntity>> GetHabitsByCategoryIdAsync(Guid categoryId, Guid userId);
         Task<IEnumerable<HabitEntity>> GetHabitsAsync(Guid userId, Priority? priority = null);
+        Task<HabitEntity?> GetByTitleAsync(Guid userId, string title);
     }
 }

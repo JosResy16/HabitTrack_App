@@ -56,6 +56,7 @@ builder.Services.AddScoped<ITokenGenerator, JwtGenerator>();
 builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddScoped<IHabitsService, HabitServices>();
 builder.Services.AddScoped<IHabitQueryService, HabitQueryService>();
+builder.Services.AddScoped<IHabitLogService, HabitLogService>();
 
 var app = builder.Build();
 
