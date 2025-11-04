@@ -12,18 +12,19 @@ namespace HabitTracker.Domain.Entities
         public Guid HabitId { get; private set; }
         public DateTime Date { get; private set; }
         public bool IsCompleted { get; private set; }
+        public ActionType ActionType { get; private set; }
 
         public HabitEntity Habit {  get; private set; }
 
         private HabitLog() { }
 
 
-        public HabitLog(Guid habitId, DateTime date, bool isCompleted)
+        public HabitLog(Guid habitId, DateTime date, ActionType actionType)
         {
             Id = Guid.NewGuid();
             HabitId = habitId;
             Date = date;
-            IsCompleted = isCompleted;
+            ActionType = actionType;
         }
     }
 }

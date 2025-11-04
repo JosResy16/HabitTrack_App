@@ -52,7 +52,7 @@ namespace HabitTracker.Application.UseCases.Habits
             var isCreated = await _habitRepository.AddAsync(habit);
 
             if (isCreated)
-                await _habitLogService.AddLogAsync(habit.Id, false);
+                await _habitLogService.AddLogAsync(habit.Id, ActionType.Created);
 
             var response = new HabitResponseDTO
             {
@@ -94,7 +94,7 @@ namespace HabitTracker.Application.UseCases.Habits
                 if (alreadyLogged)
                     return Result.Failure("Already marked this habit as done today.");
 
-                await _habitLogService.AddLogAsync(habitId, true);
+                await _habitLogService.AddLogAsync(habitId, ActionType.Completed);
             }
 
             return result ? Result.Success() : Result.Failure("Could not mark as done");
@@ -114,7 +114,7 @@ namespace HabitTracker.Application.UseCases.Habits
             var deleted = await _habitRepository.DeleteAsync(habit.Id);
 
             if (deleted)
-                await _habitLogService.AddLogAsync(habitId, false);
+                await _habitLogService.AddLogAsync(habitId, ActionType.Removed);
 
 
             return deleted ? Result.Success() : Result.Failure("Couldn't delete this habit");
@@ -138,7 +138,7 @@ namespace HabitTracker.Application.UseCases.Habits
             var result = await _habitRepository.UpdateAsync(habit);
 
             if (result)
-                await _habitLogService.AddLogAsync(habitId, false);
+                await _habitLogService.AddLogAsync(habitId, ActionType.Undone);
 
             return result ? Result.Success() : Result.Failure("Could not update this habit") ;
         }
@@ -172,7 +172,7 @@ namespace HabitTracker.Application.UseCases.Habits
             var result = await _habitRepository.UpdateAsync(habit);
 
             if (result)
-                await _habitLogService.AddLogAsync(habitId, false);
+                await _habitLogService.AddLogAsync(habitId, ActionType.Updated);
 
             var response = new HabitResponseDTO
             {

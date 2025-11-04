@@ -62,25 +62,25 @@ namespace HabitTracker.Application.UseCases.Habits
                 .Select(l => new HabitHistoryDTO
                 {
                     Date = l.Date,
-                    IsCompleted = l.IsCompleted
+                    Action = l.ActionType.ToString(),
+                    Description = l.ActionType switch
+                    {
+                        ActionType.Created => "Habit was created.",
+                        ActionType.Updated => "Habit was updated.",
+                        ActionType.Removed => "Habit was deleted.",
+                        ActionType.Completed => "Habit was marked as completed.",
+                        ActionType.Undone => "Habit was unmarked as completed.",
+                        ActionType.Archived => "Habit was archived",
+                        ActionType.Unarchived => "Habit was unarchived",
+                        _ => "Unknown action."
+                    }
                 })
                 .ToList();
 
             return Result<IEnumerable<HabitHistoryDTO>>.Success(history);
         }
 
-        public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsAsync(Priority? priority = null)
-        {
-            var userId = _userContextService.GetCurrentUserId();
-            var habits = await _habitRepository.GetHabitsAsync(userId, priority);
-
-            if (!habits.Any())
-                Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
-
-            return Result<IEnumerable<HabitEntity>>.Success(habits);
-        }
-
-        public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsByPriorityAsync(Priority? priority = null)
+        public async Task<Result<IEnumerable<HabitEntity>>> GetUserHabitsAsync(Priority? priority = null)
         {
             var userId = _userContextService.GetCurrentUserId();
             var habits = await _habitRepository.GetHabitsAsync(userId, priority);
@@ -98,11 +98,17 @@ namespace HabitTracker.Application.UseCases.Habits
             var todayLogs = await _habitLogRepository.GetLogsByDateAsync(userId, day);
 
             if (!habits.Any())
-                return Result<IEnumerable<HabitTodayDTO>>.Failure("Any habit found");
+                return Result<IEnumerable<HabitTodayDTO>>.Success(new List<HabitTodayDTO>());
 
             var todayHabits = habits.Select(habit =>
             {
-                var log = todayLogs.FirstOrDefault(l => l.HabitId == habit.Id);
+                var log = todayLogs
+                    .Where(l => l.HabitId == habit.Id)
+                    .OrderByDescending(l => l.Date)
+                    .FirstOrDefault();
+
+                bool isCompletedToday = log?.ActionType == ActionType.Completed;
+
                 return new HabitTodayDTO
                 {
                     Id = habit.Id,
@@ -110,12 +116,20 @@ namespace HabitTracker.Application.UseCases.Habits
                     Description = habit.Description,
                     CategoryId = habit.CategoryId,
                     Priority = habit.Priority,
-                    IsCompletedToday = log?.IsCompleted ?? false,
+                    IsCompletedToday = isCompletedToday,
                     LastTimeDoneAt = habit.LastTimeDoneAt
                 };
             }).ToList();
 
             return Result<IEnumerable<HabitTodayDTO>>.Success(todayHabits);
+        }
+
+        public async Task<Result<IEnumerable<HabitHistoryDTO>>> GetHabitsBetweenDatesAsync(DateTime startDate, DateTime endDate)
+        {
+            var userId = _userContextService.GetCurrentUserId();
+            var habits = await _habitRepository.GetHabitsByUserIdAsync(userId);
+
+            return Result<IEnumerable<HabitHistoryDTO>>.Success(new List<HabitHistoryDTO>());
         }
     }
 }

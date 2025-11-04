@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.Services;
+using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,9 +21,9 @@ namespace HabitTracker.Application.UseCases.Habits
             _userContextService = userContextService;
         }
 
-        public async Task<Result> AddLogAsync(Guid habitId, bool isCompleted)
+        public async Task<Result> AddLogAsync(Guid habitId, ActionType actionType)
         {
-            var log = new HabitLog(habitId, DateTime.UtcNow, isCompleted);
+            var log = new HabitLog(habitId, DateTime.UtcNow, ActionType.Created);
             await _habitLogRepository.AddAsync(log);
             return Result.Success();
         }
