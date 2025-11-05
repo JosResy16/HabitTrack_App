@@ -68,7 +68,7 @@ namespace HabitTracker.Infrastructure.Repositories
                 .Where(h => h.UserId == userId && !h.IsDeleted);
             
             if (priority.HasValue)
-                query.Where(h => h.Priority == priority.Value);
+                query = query.Where(h => h.Priority == priority.Value);
 
             return await query.ToListAsync();
         }

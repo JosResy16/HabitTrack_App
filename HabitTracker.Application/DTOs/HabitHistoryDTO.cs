@@ -6,8 +6,9 @@ namespace HabitTracker.Application.DTOs
 {
     public class HabitHistoryDTO
     {
+        public Guid HabitId { get; set; }
+        public string HabitTitle { get; set; } = string.Empty;
         public DateTime Date { get; set; }
-        public string Action { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public ActionType ActionType { get; set; }
     }
 }

@@ -13,6 +13,7 @@ namespace HabitTracker.Application.UseCases.Habits
         Task<Result<IEnumerable<HabitTodayDTO>>> GetTodayHabitsAsync(DateTime day);
         Task<Result<IEnumerable<HabitHistoryDTO>>> GetHabitHistoryAsync(Guid habitId);
         Task<Result<IEnumerable<HabitHistoryDTO>>> GetHabitsBetweenDatesAsync(DateTime startDate, DateTime endDate);
+        Task<Result<IEnumerable<HabitTodayDTO>>> GetHabitsByActionTypeAsync(ActionType actionType, DateTime day);
 
     }
 }

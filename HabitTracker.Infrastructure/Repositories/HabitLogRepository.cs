@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.Services;
+using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 using HabitTracker.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -51,5 +52,45 @@ namespace HabitTracker.Infrastructure.Repositories
                 .OrderByDescending(l => l.Date)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<HabitLog>> GetLogsBetweenDatesAsync(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            return await _DbContext.Logs
+                        .Include(l => l.Habit)
+                        .Where(l => l.Habit.UserId == userId &&
+                                    !l.Habit.IsDeleted &&
+                                    l.Date >= startDate &&
+                                    l.Date <= endDate)
+                        .OrderBy(l => l.Date)
+                        .ToListAsync();
+        }
+
+        public async Task<IEnumerable<HabitLog>> GetCompletedLogsAsync(Guid userId, DateTime? date = null)
+        {
+            var query = _DbContext.Logs
+                    .Include(l => l.Habit)
+                    .Where(l => l.Habit.UserId == userId &&
+                    !l.Habit.IsDeleted &&
+                    l.ActionType == ActionType.Completed);
+
+            if (date.HasValue)
+                query = query.Where(l => l.Date.Date == date.Value.Date);
+
+            return await query.OrderBy(l => l.Date).ToListAsync();
+        }
+        public async Task<IEnumerable<HabitLog>> GetPendingLogsAsync(Guid userId, DateTime? date = null)
+        {
+            var query = _DbContext.Logs
+                    .Include(l => l.Habit)
+                    .Where(l => l.Habit.UserId == userId &&
+                    !l.Habit.IsDeleted &&
+                    l.ActionType == ActionType.Undone);
+
+            if (date.HasValue)
+                query = query.Where(l => l.Date.Date == date.Value.Date);
+
+            return await query.OrderBy(l => l.Date).ToListAsync();
+        }
+
     }
 }
