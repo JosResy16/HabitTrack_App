@@ -81,21 +81,17 @@ namespace HabitTracker.Application.UseCases.Habits
                 return Result.Failure("Not authorized");
 
             if (habit.LastTimeDoneAt?.Date == DateTime.UtcNow.Date)
-                return Result.Failure("This habit is already marked as done today");
+                return Result.Failure("Already marked this habit as done today.");
+
+            var existingLog = await _habitLogService.GetLogForHabitAndDayAsync(habitId, DateTime.UtcNow);
+
+            if (existingLog.Value != null)
+                return Result.Failure("Already marked this habit as done today.");
 
             habit?.MarkHabitAsDone();
             var result = await _habitRepository.UpdateAsync(habit);
 
-            if (result)
-            {
-                var existingLogs = await _habitLogService.GetLogsByDateAsync(DateTime.UtcNow);
-                var alreadyLogged = existingLogs.Value.Any(l => l.HabitId == habit.Id);
-
-                if (alreadyLogged)
-                    return Result.Failure("Already marked this habit as done today.");
-
-                await _habitLogService.AddLogAsync(habitId, ActionType.Completed);
-            }
+            await _habitLogService.AddLogAsync(habitId, ActionType.Completed);
 
             return result ? Result.Success() : Result.Failure("Could not mark as done");
         }

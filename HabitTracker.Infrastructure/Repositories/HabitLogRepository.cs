@@ -92,5 +92,14 @@ namespace HabitTracker.Infrastructure.Repositories
             return await query.OrderBy(l => l.Date).ToListAsync();
         }
 
+        public async Task<HabitLog?> GetLogForHabitAndDayAsync(Guid habitId, DateTime date)
+        {
+            var day = date.Date;
+
+            return await _DbContext.Logs
+                .Include(l => l.Habit)
+                .FirstOrDefaultAsync(l => l.HabitId == habitId && l.Date == day);
+        }
+
     }
 }

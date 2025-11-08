@@ -23,7 +23,7 @@ namespace HabitTracker.Domain.Entities
         {
             Id = Guid.NewGuid();
             HabitId = habitId;
-            Date = date;
+            Date = date.Date;
             ActionType = actionType;
         }
     }

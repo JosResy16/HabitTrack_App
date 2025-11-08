@@ -46,5 +46,10 @@ namespace HabitTracker.Application.UseCases.Habits
             var logs = await _habitLogRepository.GetLogsByUserIdAsync(userId);
             return Result<IEnumerable<HabitLog>>.Success(logs);
         }
+        public async Task<Result<HabitLog?>> GetLogForHabitAndDayAsync(Guid habitId, DateTime day)
+        {
+            var log = await _habitLogRepository.GetLogForHabitAndDayAsync(habitId, day);
+            return Result<HabitLog?>.Success(log);
+        }
     }
 }
