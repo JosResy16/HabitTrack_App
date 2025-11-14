@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HabitTracker.Application", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FB61647D-547D-4CA3-AB6E-C61DDFB7AEEC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aplication.Tests", "Aplication.Tests\Aplication.Tests.csproj", "{532A0412-3919-4111-BCF6-D9D226F17973}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application.Tests", "Aplication.Tests\Application.Tests.csproj", "{532A0412-3919-4111-BCF6-D9D226F17973}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

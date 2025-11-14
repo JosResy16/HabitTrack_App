@@ -6,6 +6,7 @@ using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 using HabitTracker.Application.Services;
+using System.Text.RegularExpressions;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -51,9 +52,10 @@ namespace HabitTracker.Application.UseCases.Habits
             };
             var isCreated = await _habitRepository.AddAsync(habit);
 
-            if (isCreated)
-                await _habitLogService.AddLogAsync(habit.Id, ActionType.Created);
+            if (!isCreated)
+                return Result<HabitResponseDTO>.Failure("Could not create habit");
 
+            await _habitLogService.AddLogAsync(habit.Id, ActionType.Created);
             var response = new HabitResponseDTO
             {
                 Id = habit.Id,
@@ -91,6 +93,9 @@ namespace HabitTracker.Application.UseCases.Habits
             habit?.MarkHabitAsDone();
             var result = await _habitRepository.UpdateAsync(habit);
 
+            if (!result)
+                return Result.Failure("Could not mark as done");
+
             await _habitLogService.AddLogAsync(habitId, ActionType.Completed);
 
             return result ? Result.Success() : Result.Failure("Could not mark as done");
@@ -109,9 +114,10 @@ namespace HabitTracker.Application.UseCases.Habits
 
             var deleted = await _habitRepository.DeleteAsync(habit.Id);
 
-            if (deleted)
-                await _habitLogService.AddLogAsync(habitId, ActionType.Removed);
+            if (!deleted)
+                return Result.Failure("Couldn't delete this habit");
 
+            await _habitLogService.AddLogAsync(habitId, ActionType.Removed);
 
             return deleted ? Result.Success() : Result.Failure("Couldn't delete this habit");
         }
@@ -133,10 +139,12 @@ namespace HabitTracker.Application.UseCases.Habits
             habit?.UndoCompletion();
             var result = await _habitRepository.UpdateAsync(habit);
 
-            if (result)
-                await _habitLogService.AddLogAsync(habitId, ActionType.Undone);
+            if (!result)
+                return Result.Failure("Could not mark as undo this habit");
 
-            return result ? Result.Success() : Result.Failure("Could not update this habit") ;
+            await _habitLogService.AddLogAsync(habitId, ActionType.Undone);
+
+            return result ? Result.Success() : Result.Failure("Could not mark as undo this habit") ;
         }
 
         public async Task<Result<HabitResponseDTO?>> UpdateHabitAsync(Guid habitId, CreateHabitDTO habitDto)
@@ -149,7 +157,7 @@ namespace HabitTracker.Application.UseCases.Habits
                 return Result<HabitResponseDTO?>.Failure("Habit not found");
 
             if (habit.UserId != userId)
-                return Result<HabitResponseDTO?>.Failure("Not authorize to do this operation");
+                return Result<HabitResponseDTO?>.Failure("Not authorize");
 
             if (!string.Equals(habit.Title, habitDto.Title, StringComparison.OrdinalIgnoreCase))
             {
@@ -167,8 +175,10 @@ namespace HabitTracker.Application.UseCases.Habits
             
             var result = await _habitRepository.UpdateAsync(habit);
 
-            if (result)
-                await _habitLogService.AddLogAsync(habitId, ActionType.Updated);
+            if (!result)
+                return Result<HabitResponseDTO?>.Failure("Could not update this habit");
+
+            await _habitLogService.AddLogAsync(habitId, ActionType.Updated);
 
             var response = new HabitResponseDTO
             {
@@ -185,7 +195,7 @@ namespace HabitTracker.Application.UseCases.Habits
 
             return result ? 
                 Result<HabitResponseDTO?>.Success(response) :
-                Result<HabitResponseDTO?>.Failure("Could not update");
+                Result<HabitResponseDTO?>.Failure("Could not update this habit");
         }
     }
 }

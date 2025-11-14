@@ -2,11 +2,6 @@
 using HabitTracker.Application.Services;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -50,6 +45,26 @@ namespace HabitTracker.Application.UseCases.Habits
         {
             var log = await _habitLogRepository.GetLogForHabitAndDayAsync(habitId, day);
             return Result<HabitLog?>.Success(log);
+        }
+
+        public async Task<Result<IEnumerable<HabitLog?>>> GetLogsBetweenDatesAsync(DateTime startDate, DateTime endDate)
+        {
+            var userId = _userContextService.GetCurrentUserId();
+            var logs = await _habitLogRepository.GetLogsBetweenDatesAsync(userId, startDate, endDate);
+            return Result<IEnumerable<HabitLog?>>.Success(logs);
+        }
+        public async Task<Result<IEnumerable<HabitLog?>>> GetLogsByActionTypeAsync(ActionType actionType, DateTime day)
+        {
+            var userId = _userContextService.GetCurrentUserId();
+            IEnumerable<HabitLog?> logs = null;
+            if(actionType == ActionType.Completed)
+                logs = await _habitLogRepository.GetCompletedLogsAsync(userId, day);
+            if(actionType == ActionType.Undone)
+                logs = await _habitLogRepository.GetPendingLogsAsync(userId, day);
+            else
+                logs = new List<HabitLog?>();
+
+            return Result<IEnumerable<HabitLog?>>.Success(logs);
         }
     }
 }

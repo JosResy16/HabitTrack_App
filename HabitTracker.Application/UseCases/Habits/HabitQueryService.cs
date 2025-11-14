@@ -10,13 +10,13 @@ namespace HabitTracker.Application.UseCases.Habits
     {
         private readonly IHabitRepository _habitRepository;
         private readonly IUserContextService _userContextService;
-        private readonly IHabitLogRepository _habitLogRepository;
+        private readonly IHabitLogService _habitLogService;
 
-        public HabitQueryService(IHabitRepository habitRepository, IUserContextService userContext, IHabitLogRepository habitLogRepository)
+        public HabitQueryService(IHabitRepository habitRepository, IUserContextService userContext, IHabitLogService habitLogService)
         {
             _habitRepository = habitRepository;
             _userContextService = userContext;
-            _habitLogRepository = habitLogRepository;
+            _habitLogService = habitLogService;
         }
 
         public async Task<Result<IEnumerable<HabitEntity>>> GetHabitsByCategoryAsync(Guid categoryId)
@@ -55,9 +55,9 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habit.UserId != userId)
                 return Result<IEnumerable<HabitHistoryDTO>>.Failure("Not authorized");
 
-            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(habitId);
+            var logs = await _habitLogService.GetLogsByHabitAsync(habitId);
 
-            var history = logs
+            var history = logs.Value?
                 .OrderByDescending(l => l.Date)
                 .Select(l => new HabitHistoryDTO
                 {
@@ -87,14 +87,14 @@ namespace HabitTracker.Application.UseCases.Habits
         {
             var userId = _userContextService.GetCurrentUserId();
             var habits = await _habitRepository.GetHabitsByUserIdAsync(userId);
-            var todayLogs = await _habitLogRepository.GetLogsByDateAsync(userId, day);
+            var todayLogs = await _habitLogService.GetLogsByDateAsync(day);
 
             if (!habits.Any())
                 return Result<IEnumerable<HabitTodayDTO>>.Success(new List<HabitTodayDTO>());
 
             var todayHabits = habits.Select(habit =>
             {
-                var log = todayLogs
+                var log = todayLogs.Value?
                     .Where(l => l.HabitId == habit.Id)
                     .OrderByDescending(l => l.Date)
                     .FirstOrDefault();
@@ -119,12 +119,12 @@ namespace HabitTracker.Application.UseCases.Habits
         public async Task<Result<IEnumerable<HabitHistoryDTO>>> GetHabitsBetweenDatesAsync(DateTime startDate, DateTime endDate)
         {
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsBetweenDatesAsync(userId, startDate, endDate);
+            var logs = await _habitLogService.GetLogsBetweenDatesAsync(startDate, endDate);
 
-            if (!logs.Any())
+            if (!logs.Value.Any())
                 return Result<IEnumerable<HabitHistoryDTO>>.Failure("No logs found in the given range");
 
-            var history = logs.Select(l => new HabitHistoryDTO
+            var history = logs.Value.Select(l => new HabitHistoryDTO
             {
                 HabitId = l.Id,
                 HabitTitle = l.Habit.Title,
@@ -138,14 +138,12 @@ namespace HabitTracker.Application.UseCases.Habits
         public async Task<Result<IEnumerable<HabitTodayDTO>>> GetHabitsByActionTypeAsync(ActionType actionType, DateTime day)
         {
             var userId = _userContextService.GetCurrentUserId();
-            var logs = actionType == ActionType.Completed
-                        ? await _habitLogRepository.GetCompletedLogsAsync(userId, day)
-                        : await _habitLogRepository.GetPendingLogsAsync(userId, day);
+            var logs = await _habitLogService.GetLogsByActionTypeAsync(actionType, day);
 
-            if (!logs.Any())
+            if (!logs.Value.Any())
                 return Result<IEnumerable<HabitTodayDTO>>.Success(new List<HabitTodayDTO>());
 
-            var habits = logs.Select(l => new HabitTodayDTO
+            var habits = logs.Value.Select(l => new HabitTodayDTO
             {
                 Id = l.HabitId,
                 Title = l.Habit.Title,

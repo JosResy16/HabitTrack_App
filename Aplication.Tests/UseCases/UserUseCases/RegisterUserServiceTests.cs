@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Aplication.Tests.UseCases.User
 {
-    class RegisterUserTest
+    class RegisterUserServiceTests
     {
         private Mock<IUserRepository> _userRepositoryMock = null!;
         private Mock<ITokenGenerator> _tokenGeneratorMock = null!;

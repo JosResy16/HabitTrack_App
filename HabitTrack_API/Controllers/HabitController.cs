@@ -25,7 +25,7 @@ namespace HabitTrack_API.Controllers
         [HttpGet("me/habits")]
         public async Task<IActionResult> GetUserHabits()
         {
-            var habits = await _habitQueryService.GetHabitsAsync();
+            var habits = await _habitQueryService.GetUserHabitsAsync();
 
             if (!habits.IsSuccess || !habits.Value.Any())
                 return NoContent();
@@ -104,7 +104,7 @@ namespace HabitTrack_API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetHabitsByPriority([FromQuery] Priority? priority = null)
         {
-            var habits = await _habitQueryService.GetHabitsByPriorityAsync(priority);
+            var habits = await _habitQueryService.GetUserHabitsAsync(priority);
 
             if (!habits.IsSuccess || !habits.Value.Any())
                 return NoContent();
@@ -130,10 +130,10 @@ namespace HabitTrack_API.Controllers
             return Ok(habits.Value);
         }
 
-        [HttpGet("history")]
-        public async Task<IActionResult> GetHabitHistory()
+        [HttpGet("history/{habitId}")]
+        public async Task<IActionResult> GetHabitHistory(Guid habitId)
         {
-            var habits = await _habitQueryService.GetHabitHistoryAsync();
+            var habits = await _habitQueryService.GetHabitHistoryAsync(habitId);
             if (!habits.IsSuccess || !habits.Value.Any())
                 return NoContent();
             return Ok(habits.Value);
