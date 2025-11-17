@@ -77,9 +77,6 @@ namespace HabitTracker.Application.UseCases.Habits
             var userId = _userContextService.GetCurrentUserId();
             var habits = await _habitRepository.GetHabitsAsync(userId, priority);
 
-            if (!habits.Any())
-                Result<IEnumerable<HabitEntity>>.Success(new List<HabitEntity>());
-
             return Result<IEnumerable<HabitEntity>>.Success(habits);
         }
 

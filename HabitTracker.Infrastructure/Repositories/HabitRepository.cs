@@ -42,11 +42,7 @@ namespace HabitTracker.Infrastructure.Repositories
 
         public async Task<HabitEntity?> GetByIdAsync(Guid id)
         {
-            var result =  await _habitTrackDbContext.Habits.FirstOrDefaultAsync(h => h.Id == id && !h.IsDeleted);
-            if (result == null)
-                return null;
-
-            return result;
+            return await _habitTrackDbContext.Habits.FirstOrDefaultAsync(h => h.Id == id && !h.IsDeleted);
         }
 
         public async Task<IEnumerable<HabitEntity>> GetHabitsByCategoryIdAsync(Guid categoryId, Guid userId)
@@ -55,9 +51,6 @@ namespace HabitTracker.Infrastructure.Repositories
                 Where(h => h.CategoryId == categoryId &&
                 h.UserId == userId && !h.IsDeleted).
                 ToListAsync();
-
-            if (!habits.Any())
-                return new List<HabitEntity>();
 
             return habits;
         }
@@ -75,12 +68,9 @@ namespace HabitTracker.Infrastructure.Repositories
 
         public async Task<List<HabitEntity>> GetHabitsByUserIdAsync(Guid userId)
         {
-            var habits = await _habitTrackDbContext.Habits.Where(x => x.UserId == userId && !x.IsDeleted).ToListAsync();
-            
-            if(!habits.Any())
-                return new List<HabitEntity>();
+            var habits = _habitTrackDbContext.Habits.Where(x => x.UserId == userId && !x.IsDeleted);
 
-            return habits;
+            return await habits.ToListAsync();
         }
 
         public async Task<bool> UpdateAsync(HabitEntity habit)
@@ -92,12 +82,10 @@ namespace HabitTracker.Infrastructure.Repositories
 
         public async Task<HabitEntity?> GetByTitleAsync(Guid userId, string title)
         {
-            var habit = await _habitTrackDbContext.Habits.FirstOrDefaultAsync(
+            var habit = _habitTrackDbContext.Habits.FirstOrDefaultAsync(
                 x => x.UserId == userId && x.Title == title && !x.IsDeleted);
-            if(habit == null)
-                return null;
 
-            return habit;
+            return await habit;
         }
 
     }
