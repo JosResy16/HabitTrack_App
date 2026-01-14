@@ -1,4 +1,5 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
+using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
 using HabitTracker.Domain.Entities;
 using System;
@@ -12,72 +13,73 @@ namespace HabitTracker.Application.UseCases.Categories
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
-        private readonly UserContextService _userContext;
+        private readonly IUserContextService _userContext;
 
-        public CategoryService(ICategoryRepository categoryRepository, UserContextService userContext)
+        public CategoryService(ICategoryRepository categoryRepository, IUserContextService userContext)
         {
             _categoryRepository = categoryRepository;
             _userContext = userContext;
         }
 
-        public async Task<Result<CategoryEntity>> CreateNewCategory(CategoryEntity category)
+        public async Task<Result<CategoryResponseDTO>> CreateNewCategory(string title)
         {
             var userId = _userContext.GetCurrentUserId();
 
-            if (userId == Guid.Empty)
-                return Result<CategoryEntity>.Failure("User not found/Not loged in");
+            var categoryEntity = new CategoryEntity(userId, title);
 
-            await _categoryRepository.AddCategoryAsync(category);
 
-            return Result<CategoryEntity>.Success(category);
+            await _categoryRepository.AddCategoryAsync(categoryEntity);
+            await _categoryRepository.SaveChangesAsync();
+
+            return Result<CategoryResponseDTO>.Success(MapToDto(categoryEntity));
         }
 
         public async Task<Result> DeleteCategory(Guid categoryId)
         {
-            var category = await _categoryRepository.GetCategoryByIdAsync(categoryId);
             var userId = _userContext.GetCurrentUserId();
+            var category = await _categoryRepository.GetCategoryByIdAsync(userId, categoryId);
 
-            if (category?.UserId != userId)
-                return Result.Failure("User not found/Not loged in");
+            if (category == null)
+                return Result.Failure("Category not found");
 
-            if (category.Id == Guid.Empty)
-                return Result.Failure("category not found");
+            category.SoftDelete();
+            await _categoryRepository.SaveChangesAsync();
 
-
-            var result = await _categoryRepository.DeleteCategoryAsync(category.Id);
-
-            return result
-                ? Result.Success()
-                : Result.Failure("Could not delete the category");
+            return Result.Success();
         }
 
-        public async Task<Result<IEnumerable<CategoryEntity>>> GetCategories()
+        public async Task<Result<IEnumerable<CategoryResponseDTO>>> GetCategories()
         {
             var userId = _userContext.GetCurrentUserId();
             var categories = await _categoryRepository.GetCategoriesByUserIdAsync(userId);
 
-            if (!categories.Any())
-                Result.Failure("categories do not found");
+            var categoriesDto = categories.Select(MapToDto);
 
-            return Result<IEnumerable<CategoryEntity>>.Success(categories);
+            return Result<IEnumerable<CategoryResponseDTO>>.Success(categoriesDto);
         }
 
-        public async Task<Result> UpdateCategory(Guid categoryId, CategoryEntity category)
+        public async Task<Result> UpdateCategory(Guid categoryId, string name)
         {
             var userId = _userContext.GetCurrentUserId();
 
-            var categoryFromDb = await _categoryRepository.GetCategoryByIdAsync(categoryId);
-            if (categoryFromDb == null)
+            var category = await _categoryRepository.GetCategoryByIdAsync(userId, categoryId);
+
+            if (category == null)
                 return Result.Failure("category do not found");
 
-            if (categoryFromDb?.UserId != userId)
-                return Result.Failure("category does not belong to this user");
+            category.Rename(name);
+            await _categoryRepository.SaveChangesAsync();
 
-            var result = await _categoryRepository.UpdateCategoryAsync(categoryFromDb, category);
+            return Result.Success();
+        }
 
-            return result
-                ? Result.Success()
-                : Result.Failure("Category could not be updated.");
+        private static CategoryResponseDTO MapToDto(CategoryEntity entity)
+        {
+            return new CategoryResponseDTO
+            {
+                Id = entity.Id,
+                Title = entity.Title!
+            };
         }
     }
 }

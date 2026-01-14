@@ -4,29 +4,70 @@ namespace HabitTracker.Domain.Entities
 {
     public class HabitEntity
     {
+        private HabitEntity() { }
+
+        public HabitEntity(
+        Guid userId,
+        string title,
+        string? description,
+        Period? repeatPeriod,
+        int? repeatInterval)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException("Title is required");
+
+            if (repeatInterval <= 0)
+                throw new ArgumentException("Repeat interval must be greater than zero");
+
+            UserId = userId;
+            Title = title;
+            Description = description;
+            RepeatPeriod = repeatPeriod;
+            RepeatInterval = repeatInterval;
+
+            IsCompleted = false;
+            IsDeleted = false;
+        }
+
         public Guid Id { get; set; }
 
         [Required(ErrorMessage= "Title is necesary")]
-        [MaxLength(100, ErrorMessage = "Title can't be longer than 100 characters")]
         public string Title { get; set; } = string.Empty;
 
-        [MaxLength(500, ErrorMessage = "Description can't be longer than 500 characters")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
         public Guid UserId { get; set; }
-        public UserEntity User { get; set; }
+        public UserEntity? User { get; set; }
         public bool IsCompleted { get; private set; } = false;
         public Guid? CategoryId { get; set; }
         public CategoryEntity? Category { get; set; }
         public Priority? Priority { get; set; }
-        public bool IsDeleted { get; set; }
+        public bool IsDeleted { get; private set; }
 
-        [Range(0, int.MaxValue, ErrorMessage = "Repeat count shuld be a positive number")]
         public int RepeatCount { get; set; }
-        public int RepeatInterval { get; set; }
-        public Period RepeatPeriod { get; set; }
+        public int? RepeatInterval { get; set; }
+        public Period? RepeatPeriod { get; set; }
         public TimeOnly? Duration { get; set; }
         public DateTime? LastTimeDoneAt { get; private set; }
+
+        public void SoftDelete()
+        {
+            if (IsDeleted) return;
+            IsDeleted = true;
+        }
+
+        public void UpdateDetails(
+            string title,
+            string description,
+            Priority? priority)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException("Title is required");
+
+            Title = title;
+            Description = description;
+            Priority = priority;
+        }
 
         public void MarkHabitAsDone()
         {

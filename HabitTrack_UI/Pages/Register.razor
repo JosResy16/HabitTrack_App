@@ -1,0 +1,52 @@
+﻿@page "/register";
+@layout AuthLayout;
+
+@using HabitTrack_UI.Models;
+@using System.ComponentModel.DataAnnotations;
+
+<h3>Helllo!</h3>
+<p>Sign up to get started</p>
+
+<EditForm Model="Model" OnValidSubmit="RegisterHandling">
+    <DataAnnotationsValidator/>
+    <div>
+        <label>Email</label>
+        <InputText @bind-Value="Model.Email" placeholder="Your email here"/>
+        <ValidationMessage For="@(() => Model.Email)" />
+    </div>
+    <div>
+        <label>Password</label>
+        <InputText type="password" @bind-Value="Model.Password" placeholder="Password" />
+        <ValidationMessage For="@(() => Model.Password)" />
+    </div>
+
+    <div>
+        <label>Confirm Password</label>
+        <InputText type="password" @bind-Value="Model.ConfirmPassword" placeholder="Confirm password" />
+        <ValidationMessage For="@(() => Model.ConfirmPassword)" />
+    </div>
+
+    <button type="submit" disabled="@IsSubmitting">
+        @(IsSubmitting ? "Registering..." : "Register")
+    </button>
+
+    <div>
+        <NavLink href="/login">I already have an account</NavLink>
+    </div>
+</EditForm>
+
+@code {
+    private RegisterModel Model = new RegisterModel();
+    private bool IsSubmitting = false;
+
+    private async Task RegisterHandling()
+    {
+        IsSubmitting = true;
+
+        //pocess
+        await Task.Delay(3000);
+
+
+        IsSubmitting = false;
+    }
+}

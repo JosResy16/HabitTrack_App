@@ -1,0 +1,22 @@
+﻿<div class="stat-card">
+    <p class="stat-title">Today's Progress</p>
+
+    <div class="stat-content">
+        <div>
+            <p class="stat-value">@Completed / @Total</p>
+            <p class="stat-subtitle">@($"{Percentage}% completed")</p>
+        </div>
+
+        <div>
+            <span>Icon here</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Completed { get; set; }
+    [Parameter] public int Total { get; set; }
+
+    private int Percentage =>
+        Total == 0 ? 0 : (int)((double)Completed / Total * 100);
+}

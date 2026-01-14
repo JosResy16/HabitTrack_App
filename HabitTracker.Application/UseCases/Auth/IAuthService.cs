@@ -1,17 +1,13 @@
 ﻿using HabitTracker.Application.DTOs;
-using HabitTracker.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using HabitTracker.Application.Services;
 
 namespace HabitTracker.Application.UseCases.Auth
 {
     public interface IAuthService
     {
-        Task<UserEntity?> RegisterAsync(UserDTO request);
-        Task<TokenResponseDTO?> LoginAsync(UserDTO request);
-        Task<TokenResponseDTO?> RefreshTokenAsync(RefreshTokenRequestDTO request);
+        Task<Result<UserDTO>> RegisterAsync(RegisterRequest request);
+        Task<Result<TokenResponseDTO>> LoginAsync(LoginRequest request);
+        Task<Result<TokenResponseDTO>> RefreshTokenAsync(RefreshTokenRequestDTO request);
+        Task<Result> LogoutAsync(Guid userId);
     }
 }

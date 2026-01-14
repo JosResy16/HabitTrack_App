@@ -1,4 +1,5 @@
 ﻿using HabitTracker.Application.Services;
+using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 
 
@@ -6,14 +7,16 @@ namespace HabitTracker.Application.Common.Interfaces
 {
     public interface IHabitLogRepository
     {
+        Task SaveChangesAsync();
         Task AddAsync(HabitLog log);
-        Task<IEnumerable<HabitLog>> GetLogsByHabitIdAsync(Guid habitId);
+        Task<IEnumerable<HabitLog>> GetLogsByHabitIdAsync(Guid userId, Guid habitId);
         Task<IEnumerable<HabitLog>> GetLogsByUserIdAsync(Guid userId);
-        Task<IEnumerable<HabitLog>> GetLogsByDateAsync(Guid userId, DateTime date);
-        Task<IEnumerable<HabitLog>> GetLogsBetweenDatesAsync(Guid userId, DateTime startDate, DateTime endDate);
-        Task<IEnumerable<HabitLog>> GetCompletedLogsAsync(Guid userId, DateTime? date = null);
-        Task<IEnumerable<HabitLog>> GetPendingLogsAsync(Guid userId, DateTime? date = null);
-        Task<HabitLog?> GetLogForHabitAndDayAsync(Guid habitId, DateTime date);
+        Task<IEnumerable<HabitLog>> GetLogsByDateAsync(Guid userId, DateOnly date);
+        Task<IEnumerable<HabitLog>> GetLogsBetweenDatesAsync(Guid userId, DateOnly startDate, DateOnly endDate);
+        Task<IEnumerable<HabitLog>> GetCompletedLogsAsync(Guid userId, DateOnly? date = null);
+        Task<IEnumerable<HabitLog>> GetPendingLogsAsync(Guid userId, DateOnly? date = null);
+        Task<HabitLog?> GetLogForHabitAndDayAsync(Guid habitId, DateOnly date);
+        Task<IEnumerable<HabitLog>> GetLogsByActionTypeAsync(Guid userId, ActionType actionType, DateOnly date);
 
     }
 }

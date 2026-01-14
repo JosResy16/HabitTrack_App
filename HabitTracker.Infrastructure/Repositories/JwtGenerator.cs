@@ -1,9 +1,4 @@
-﻿using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Domain.Entities;
 using Microsoft.IdentityModel.Tokens;
@@ -27,7 +22,7 @@ namespace HabitTracker.Infrastructure.Repositories
             {
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_appSettings.Token)!);

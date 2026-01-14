@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json;
 
@@ -24,14 +23,15 @@ namespace HabitTrack_API.Middlewares
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Unhandled exception occurred");
                 await HandleExceptionAsync(context, ex);
             }
         }
 
         private static Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
-            HttpStatusCode statusCode = HttpStatusCode.Accepted;
-            string message = string.Empty;
+            HttpStatusCode statusCode;
+            string message;
 
             switch (ex)
             {
@@ -47,12 +47,22 @@ namespace HabitTrack_API.Middlewares
                     statusCode = HttpStatusCode.NotFound;
                     message = ex.Message;
                     break;
+                default:
+                    statusCode = HttpStatusCode.InternalServerError;
+                    message = "An unexpected error occurred.";
+                    break;
             }
 
-            var result = JsonSerializer.Serialize(new {error = message});
+            var response = new
+            {
+                isSuccess = false,
+                ErrorMessage = message
+            };
+
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
-            return context.Response.WriteAsync(result);
+
+            return context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
     }
 }

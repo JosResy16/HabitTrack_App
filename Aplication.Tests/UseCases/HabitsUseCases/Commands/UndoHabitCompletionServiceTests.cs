@@ -24,81 +24,81 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         }
 
         [Test]
-        public async Task UndoHabitCompetion_WithValidData_ReturnSuccess()
+        public async Task UndoHabitCompletion_WithValidData_ReturnSuccess()
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var habit = new HabitEntity { Id = habitId, Title = "Habit test", UserId = userId };
+            var habit = new HabitEntity(userId, "title", null, null, null);
             habit.MarkHabitAsDone();
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync(habit);
-            _habitRepositoryMock.Setup(x => x.UpdateAsync(habit)).ReturnsAsync(true);
+            _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
             _habitLogRepositoryMock.Setup(l => l.AddLogAsync(habitId, ActionType.Undone)).ReturnsAsync(Result.Success());
+            _habitRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
             var result = await _habitService.UndoHabitCompletion(habitId);
 
             Assert.That(result.IsSuccess, Is.True);
-            _habitRepositoryMock.Verify(x => x.UpdateAsync(It.Is<HabitEntity>(h => !h.IsCompleted)), Times.Once);
-            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Once);
+            Assert.That(habit.IsCompleted, Is.False);
+
+            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(habitId, ActionType.Undone), Times.Once);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
 
         [Test]
-        public async Task UndoHabitCompetion_WhenHabitDoesNotExist_ReturnFailure()
+        public async Task UndoHabitCompletion_WhenHabitDoesNotExist_ReturnFailure()
         {
             var userId = Guid.NewGuid();
-            var habitId = Guid.NewGuid();
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync((HabitEntity?)null);
+            _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((HabitEntity?)null);
 
-            var result = await _habitService.UndoHabitCompletion(habitId);
+            var result = await _habitService.UndoHabitCompletion(Guid.NewGuid());
 
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ErrorMessage, Is.EqualTo("Habit not found"));
 
-            _habitRepositoryMock.Verify(x => x.UpdateAsync(It.Is<HabitEntity>(h => h.IsCompleted)), Times.Never);
             _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
         [Test]
-        public async Task UndoHabitCompetion_WhenUserIsNotOwner_ReturnFailure()
+        public async Task UndoHabitCompletion_WhenUserIsNotOwner_ReturnFailure()
         {
             var userId = Guid.NewGuid();
             var otherUserId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var habit = new HabitEntity { Id = habitId, Title = "Habit test", UserId = otherUserId };
+            var habit = new HabitEntity(otherUserId, "title", null, null, null);
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync(habit);
+            _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var result = await _habitService.UndoHabitCompletion(habitId);
 
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ErrorMessage, Is.EqualTo("Not authorized"));
 
-            _habitRepositoryMock.Verify(x => x.UpdateAsync(It.Is<HabitEntity>(h => h.IsCompleted)), Times.Never);
             _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
         [Test]
-        public async Task UndoHabitCompetion_WhenUpdateFails_ReturnsFailure()
+        public async Task UndoHabitCompletion_WhenHabitIsNotMarkedAsCompleted_ReturnsFailure()
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var habit = new HabitEntity { Id = habitId, UserId = userId};
-            habit.MarkHabitAsDone();
+            var habit = new HabitEntity(userId, "title", null, null, null);
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync(habit);
-            _habitRepositoryMock.Setup(x => x.UpdateAsync(habit)).ReturnsAsync(false);
+            _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var result = await _habitService.UndoHabitCompletion(habitId);
 
             Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorMessage, Is.EqualTo("Could not mark as undo this habit"));
+            Assert.That(result.ErrorMessage, Is.EqualTo("Habit is not marked as completed"));
 
             _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
     }
 }

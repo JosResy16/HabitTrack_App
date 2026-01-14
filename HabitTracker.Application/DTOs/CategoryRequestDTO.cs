@@ -4,10 +4,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HabitTracker.Application.DTOs
 {
-    public class CategoryDTO
+    public class CategoryRequestDTO
     {
         [Required]
-        public string Title { get; set; }
-        public string? Description { get; set; }
+        [MaxLength(50)]
+        public string Title { get; set; } = string.Empty;
     }
 }

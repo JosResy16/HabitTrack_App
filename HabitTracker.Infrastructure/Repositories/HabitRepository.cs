@@ -19,25 +19,14 @@ namespace HabitTracker.Infrastructure.Repositories
             _habitTrackDbContext = habitTrackDBContext;
         }
 
-        public async Task<bool> AddAsync(HabitEntity habit)
+        public async Task SaveChangesAsync()
         {
-            await _habitTrackDbContext.Habits.AddAsync(habit);
-            var rowsAffected = await _habitTrackDbContext.SaveChangesAsync();
-            return rowsAffected > 0;
+            await _habitTrackDbContext.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task AddAsync(HabitEntity habit)
         {
-            var habit = await _habitTrackDbContext.Habits.FirstOrDefaultAsync(
-                h => h.Id == id && !h.IsDeleted);
-            if (habit == null)
-                return false;
-
-            habit.IsDeleted = true;
-            _habitTrackDbContext.Update(habit);
-
-            var rowsAffected = await _habitTrackDbContext.SaveChangesAsync();
-            return rowsAffected > 0;
+            await _habitTrackDbContext.Habits.AddAsync(habit);
         }
 
         public async Task<HabitEntity?> GetByIdAsync(Guid id)
@@ -66,27 +55,10 @@ namespace HabitTracker.Infrastructure.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<List<HabitEntity>> GetHabitsByUserIdAsync(Guid userId)
-        {
-            var habits = _habitTrackDbContext.Habits.Where(x => x.UserId == userId && !x.IsDeleted);
-
-            return await habits.ToListAsync();
-        }
-
-        public async Task<bool> UpdateAsync(HabitEntity habit)
-        {
-            _habitTrackDbContext.Update(habit);
-            var rowsAffected = await _habitTrackDbContext.SaveChangesAsync();
-            return rowsAffected > 0 ;
-        }
-
         public async Task<HabitEntity?> GetByTitleAsync(Guid userId, string title)
         {
-            var habit = _habitTrackDbContext.Habits.FirstOrDefaultAsync(
-                x => x.UserId == userId && x.Title == title && !x.IsDeleted);
-
-            return await habit;
+            return await _habitTrackDbContext.Habits
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.Title == title && !x.IsDeleted);
         }
-
     }
 }

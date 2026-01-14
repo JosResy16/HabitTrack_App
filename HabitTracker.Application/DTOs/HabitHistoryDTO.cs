@@ -8,7 +8,7 @@ namespace HabitTracker.Application.DTOs
     {
         public Guid HabitId { get; set; }
         public string HabitTitle { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
         public ActionType ActionType { get; set; }
     }
 }

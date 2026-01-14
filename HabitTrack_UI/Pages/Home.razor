@@ -1,0 +1,37 @@
+﻿@page "/"
+@using HabitTrack_UI.Components.Dashboard;
+
+<PageTitle>Home</PageTitle>
+
+<h1>Habit tracker</h1>
+<p>Build better habits, one day at a time</p>
+
+<section>
+    <StatsSummary Completed="CompletedHabits" Total="TotalHabits"/>
+</section>
+
+<section>
+    <AddHabit/>
+</section>
+
+<section>
+    <TodayHabitList Habits="Habits" OnToggleHabit="ToggleHabit"/>
+</section>
+
+
+@code{
+    private List<HabitTodayDTO> Habits = new()
+    {
+        new() { Id = Guid.NewGuid(), Title = "Drink water", IsCompletedToday = false },
+        new() { Id = Guid.NewGuid(), Title = "Read 10 minutes", IsCompletedToday = true }
+    };
+
+    private int TotalHabits => Habits.Count;
+    private int CompletedHabits => Habits.Count(h => h.IsCompletedToday);
+
+    private void ToggleHabit(HabitTodayDTO habit)
+    {
+        habit.IsCompletedToday = !habit.IsCompletedToday;
+    }
+}
+

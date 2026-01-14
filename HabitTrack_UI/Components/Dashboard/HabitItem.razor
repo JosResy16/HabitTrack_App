@@ -1,0 +1,16 @@
+﻿
+
+<InputCheckbox @bind-Value="Habit.IsCompletedToday"
+               @onchange="OnChanged" />
+
+<span>@Habit.Title</span>
+
+@code {
+    [Parameter] public HabitTodayDTO Habit { get; set; } = default!;
+    [Parameter] public EventCallback<HabitTodayDTO> OnToggleCompleted { get; set; }
+
+    private async Task OnChanged(ChangeEventArgs _)
+    {
+        await OnToggleCompleted.InvokeAsync(Habit);
+    }
+}

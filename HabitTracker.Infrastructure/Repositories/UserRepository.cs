@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using HabitTracker.Application.Common.Interfaces;
+﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Domain.Entities;
 using HabitTracker.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -19,29 +14,32 @@ namespace HabitTracker.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task AddUserAsync(UserEntity user)
+        public async Task SaveChangesAsync()
         {
-            if (await _context.Users.AnyAsync(u => u.UserName == user.UserName))
-                return;
-
-            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<UserEntity?> GetByUsernameAsync(string username)
+        public async Task AddUserAsync(UserEntity user)
         {
-            var response = await _context.Users.SingleOrDefaultAsync(u => u.UserName == username);
-            if (response is null)
-                return null;
-            return response;
+            await _context.Users.AddAsync(user);
+        }
+
+        public async Task<UserEntity?> GetByEmailAsync(string email)
+        {
+            return await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<UserEntity?> GetById(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-                return null;
-            return user;
+            return await _context.Users.FindAsync(id).AsTask();
+        }
+
+        public async Task<UserEntity?> GetByRefreshTokenAsync(string refreshToken)
+        {
+            return await _context.Users
+                .SingleOrDefaultAsync(u =>
+                    u.RefreshToken == refreshToken &&
+                    u.RefreshTokenExpiryTime > DateTime.UtcNow);
         }
     }
 }

@@ -1,0 +1,21 @@
+﻿<div class="container">
+    <p>@Title</p>
+
+    <div>
+        <div>
+            <p>@Value</p>
+            <p>@Subtitle</p>
+        </div>
+
+        <div>
+            <span>@Icon</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public string? Icon { get; set; }
+}

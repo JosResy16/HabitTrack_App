@@ -1,14 +1,13 @@
-﻿using HabitTracker.Application.Common.Interfaces;
-using HabitTracker.Application.DTOs;
+﻿using HabitTracker.Application.DTOs;
+using HabitTracker.Application.Services;
 using HabitTracker.Application.UseCases.Habits;
 using HabitTracker.Domain;
-using HabitTracker.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTrack_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/habits")]
     [ApiController]
     [Authorize]
     public class HabitController : ControllerBase
@@ -22,121 +21,101 @@ namespace HabitTrack_API.Controllers
             _habitQueryService = habitQueryService;
         }
 
-        [HttpGet("me/habits")]
-        public async Task<IActionResult> GetUserHabits()
+        [HttpGet]
+        public async Task<IActionResult> GetHabitsAsync([FromQuery] Priority? priority)
         {
-            var habits = await _habitQueryService.GetUserHabitsAsync();
-
-            if (!habits.IsSuccess || !habits.Value.Any())
-                return NoContent();
-
-            return Ok(habits);
+            var result = await _habitQueryService.GetUserHabitsAsync(priority);
+            return FromResult(result);
         }
 
         [HttpGet("{habitId}")]
-        public async Task<IActionResult> GetHabitById(Guid habitId)
+        public async Task<IActionResult> GetByIdAsync(Guid habitId)
         {
-            var habit = await _habitQueryService.GetHabitByIdAsync(habitId);
-            if (!habit.IsSuccess)
-                return NoContent();
+            var result = await _habitQueryService.GetHabitByIdAsync(habitId);
+            return FromResult(result);
+        }
 
-            return Ok(habit);
+        [HttpGet("day")]
+        public async Task<IActionResult> GetTodayHabitsAsync([FromQuery]DateOnly? day)
+        {
+            var habits = await _habitQueryService.GetTodayHabitsAsync(day ?? DateOnly.FromDateTime(DateTime.UtcNow));
+            return FromResult(habits);
+        }
+
+        [HttpGet("{habitId}/history")]
+        public async Task<IActionResult> GetHistory(Guid habitId)
+        {
+            var result = await _habitQueryService.GetHabitHistoryAsync(habitId);
+            return FromResult(result);
+        }
+
+        [HttpGet("category/{categoryId}")]
+        public async Task<IActionResult> GetByCategoryAsync(Guid categoryId)
+        {
+            var result = await _habitQueryService.GetHabitsByCategoryAsync(categoryId);
+            return FromResult(result);
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(CreateHabitDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateNewHabit([FromBody] CreateHabitDTO habitDto)
+        public async Task<IActionResult> Create([FromBody] CreateHabitDTO habitDto)
         {
-            if (habitDto == null)
-                return BadRequest("Habit data is required.");
-
             var result = await _habitService.AddNewHabitAsync(habitDto);
 
             if (!result.IsSuccess)
                 return BadRequest(result.ErrorMessage);
 
-            return CreatedAtAction(nameof(GetHabitById), new { habitId = result.Value?.Id }, result.Value);
+            return CreatedAtAction(nameof(GetByIdAsync), new { habitId = result.Value?.Id }, result.Value);
         }
 
         [HttpPut("{habitId}")]
-        public async Task<IActionResult> UpdateAnExistingHabit([FromBody] CreateHabitDTO habitDto, Guid habitId)
+        public async Task<IActionResult> UpdateAsync(Guid habitId, [FromBody] CreateHabitDTO dto)
         {
-            var updateHabit = await _habitService.UpdateHabitAsync(habitId, habitDto);
-
-            if (!updateHabit.IsSuccess)
-                return BadRequest(updateHabit.ErrorMessage);
-
-            return Ok(updateHabit.Value);
+            var result = await _habitService.UpdateHabitAsync(habitId, dto);
+            return FromResult(result);
         }
 
-        [HttpPost("{habitId}/done")]
-        public async Task<IActionResult> MarkHabitAsDone(Guid habitId)
+        [HttpPost("{habitId}/complete")]
+        public async Task<IActionResult> CompleteAsync(Guid habitId)
         {
             var response = await _habitService.MarkHabitAsDone(habitId);
-
-            if (!response.IsSuccess)
-                return BadRequest(response.ErrorMessage);
-
-            return Ok(response.IsSuccess);
+            return FromResult(response);
         }
 
-        [HttpDelete("{habitId}/done")]
-        public async Task<IActionResult> UndoHabitCompletion(Guid habitId)
+        [HttpDelete("{habitId}/complete")]
+        public async Task<IActionResult> UncompleteAsync(Guid habitId)
         {
-            var response = await _habitService.UndoHabitCompletion(habitId);
-            if (!response.IsSuccess)
-                return BadRequest(response.ErrorMessage);
-
-            return Ok(response.IsSuccess);
+            var result = await _habitService.UndoHabitCompletion(habitId);
+            return FromResult(result);
         }
 
         [HttpDelete("{habitId}")]
-        public async Task<IActionResult> RemoveHabitAsync(Guid habitId)
+        public async Task<IActionResult> RemoveAsync(Guid habitId)
         {
-            var response = await _habitService.RemoveHabitAsync(habitId);
-            if (!response.IsSuccess)
-                return BadRequest(response.ErrorMessage);
-
-            return Ok(response.IsSuccess);
+            var result = await _habitService.RemoveHabitAsync(habitId);
+            return FromResult(result);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetHabitsByPriority([FromQuery] Priority? priority = null)
+        private IActionResult FromResult<T>(Result<T> result)
         {
-            var habits = await _habitQueryService.GetUserHabitsAsync(priority);
+            if (result.IsSuccess)
+            {
+                return Ok(result.Value);
+            }
 
-            if (!habits.IsSuccess || !habits.Value.Any())
-                return NoContent();
-
-            return Ok(habits.Value);
+            return BadRequest(result.ErrorMessage);
         }
 
-        [HttpGet("category/{categoryId}")]
-        public async Task<IActionResult> GetHabitsByCategory(Guid categoryId)
+        private IActionResult FromResult(Result result)
         {
-            var habits = await _habitQueryService.GetHabitsByCategoryAsync(categoryId);
-            if (!habits.IsSuccess || !habits.Value.Any())
-                return NoContent();
-            return Ok(habits.Value);
+            if (result.IsSuccess)
+            {
+                return Ok();
+            }
+
+            return BadRequest(result.ErrorMessage);
         }
 
-        [HttpGet("today")]
-        public async Task<IActionResult> GetTodaysHabit([FromBody] DateTime? day = null)
-        {
-            var habits = await _habitQueryService.GetTodayHabitsAsync(day ?? DateTime.UtcNow);
-            if (!habits.IsSuccess || !habits.Value.Any())
-                return NoContent();
-            return Ok(habits.Value);
-        }
-
-        [HttpGet("history/{habitId}")]
-        public async Task<IActionResult> GetHabitHistory(Guid habitId)
-        {
-            var habits = await _habitQueryService.GetHabitHistoryAsync(habitId);
-            if (!habits.IsSuccess || !habits.Value.Any())
-                return NoContent();
-            return Ok(habits.Value);
-        }
     }
 }

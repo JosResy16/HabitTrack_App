@@ -1,94 +1,92 @@
 ﻿using HabitTracker.Application.DTOs;
 using HabitTracker.Domain.Entities;
-using System.Text;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
-using HabitTracker.Application.Configuration;
-using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using HabitTracker.Application.Common.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
+using HabitTracker.Application.Services;
 
 namespace HabitTracker.Application.UseCases.Auth
 {
     public class AuthService : IAuthService
     {
-        private readonly AppSettings _appSettings;
         private readonly IUserRepository _userRepository;
         private readonly ITokenGenerator _jwtGenerator;
-        public AuthService(IOptions<AppSettings> appSettings, IUserRepository userRepository, ITokenGenerator jwtGenerator)
+
+        public AuthService(IUserRepository userRepository, ITokenGenerator jwtGenerator)
         {
-            _appSettings = appSettings.Value;
             _userRepository = userRepository;
             _jwtGenerator = jwtGenerator;
         }
 
-        // register a new user
-        public async Task<UserEntity?> RegisterAsync(UserDTO request)
+        public async Task<Result<UserDTO>> RegisterAsync(RegisterRequest request)
         {
-            var existUser = await _userRepository.GetByUsernameAsync(request.UserName);
-            if (existUser != null)
-                throw new ArgumentException("User already exist with this username");
+            var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+            if (existingUser != null)
+                return Result<UserDTO>.Failure("User already exists with this email");
 
-            var user = new UserEntity();
-            var hashPassword = new PasswordHasher<UserEntity>()
-               .HashPassword(user, request.Password);
+            var user = new UserEntity(request.UserName, request.Email);
 
-            user.UserName = request.UserName;
-            user.PasswordHashed = hashPassword;
+            var passwordHash = new PasswordHasher<UserEntity>()
+                .HashPassword(user, request.Password);
+
+            user.SetPassword(passwordHash);
 
             await _userRepository.AddUserAsync(user);
+            await _userRepository.SaveChangesAsync();
 
-            return user;
+            return Result<UserDTO>.Success(MapToDto(user));
         }
 
-        // log in method
-        public async Task<TokenResponseDTO?> LoginAsync(UserDTO request)
+        public async Task<Result<TokenResponseDTO>> LoginAsync(LoginRequest request)
         {
-            var user = await _userRepository.GetByUsernameAsync(request.UserName);
+            var user = await _userRepository.GetByEmailAsync(request.Email);
+            if (user == null || !user.VerifyPassword(request.Password))
+                return Result<TokenResponseDTO>.Failure("Invalid email or password");
+
+            var tokenResponse = await CreateTokenResponseAsync(user);
+            return Result<TokenResponseDTO>.Success(tokenResponse);
+        }
+
+        public async Task<Result<TokenResponseDTO>> RefreshTokenAsync(RefreshTokenRequestDTO request)
+        {
+            var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken);
+
+            if (user == null || !user.IsValidRefreshToken(request.RefreshToken))
+                return Result<TokenResponseDTO>.Failure("Invalid refresh token");
+
+            var tokenResponse = await CreateTokenResponseAsync(user);
+
+            return Result<TokenResponseDTO>.Success(tokenResponse);
+        }
+
+        public async Task<Result> LogoutAsync(Guid userId)
+        {
+            var user = await _userRepository.GetById(userId);
             if (user == null)
-            {
-                throw new UnauthorizedAccessException("username or password invalid");
-            }
-            if (new PasswordHasher<UserEntity>().VerifyHashedPassword(user, user.PasswordHashed, request.Password)
-                == PasswordVerificationResult.Failed)
-            {
-                throw new UnauthorizedAccessException("username or password invalid");
-            }
+                return Result.Failure("User not found");
 
-            return await CreateTokenResponse(user); ;
+            user.UpdateRefreshToken(null, DateTime.UtcNow);
+            await _userRepository.SaveChangesAsync();
+
+            return Result.Success();
         }
 
-        //Generates refresh token
-        public async Task<TokenResponseDTO?> RefreshTokenAsync(RefreshTokenRequestDTO request)
+        private async Task<TokenResponseDTO> CreateTokenResponseAsync(UserEntity user)
         {
-            var user = await ValidateRefreshTokenAsync(request.UserId, request.RefreshToken);
-            if (user is null)
-                return null;
+            var refreshToken = GenerateRefreshToken();
 
-            return await CreateTokenResponse(user);
-        }
+            user.UpdateRefreshToken(
+                refreshToken,
+                DateTime.UtcNow.AddDays(7)
+            );
 
-        // Create token response
-        private async Task<TokenResponseDTO> CreateTokenResponse(UserEntity user)
-        {
+            await _userRepository.SaveChangesAsync();
+
             return new TokenResponseDTO
             {
                 AccessToken = _jwtGenerator.GenerateToken(user),
-                RefreshToken = GenerateAndSaveRefreshTokenAsync(user)
+                RefreshToken = refreshToken
             };
-        }
-
-        private async Task<UserEntity?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
-        {
-            var user = await _userRepository.GetById(userId);
-            if (user is null || user.RefreshToken != refreshToken
-                || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-            {
-                return null;
-            }
-            return user;
         }
 
         private string GenerateRefreshToken()
@@ -99,14 +97,13 @@ namespace HabitTracker.Application.UseCases.Auth
             return Convert.ToBase64String(randomNumber);
         }
 
-        private string GenerateAndSaveRefreshTokenAsync(UserEntity user)
+        private static UserDTO MapToDto(UserEntity user)
         {
-            var refreshToken = GenerateRefreshToken();
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-
-            return refreshToken;
+            return new UserDTO
+            {
+                Id = user.Id,
+                UserName = user.UserName
+            };
         }
-
     }
 }

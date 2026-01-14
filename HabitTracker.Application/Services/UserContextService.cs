@@ -19,7 +19,7 @@ namespace HabitTracker.Application.Services
             var claims = _httpContextAccessor.HttpContext?.User?.Claims;
 
             if (claims == null || !claims.Any())
-                throw new UnauthorizedAccessException("No claims found. Did you send the JWT?");
+                throw new UnauthorizedAccessException("No claims found.");
 
             foreach (var claim in claims)
             {

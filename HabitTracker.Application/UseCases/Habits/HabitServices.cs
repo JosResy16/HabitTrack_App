@@ -1,12 +1,8 @@
-﻿
-
-using HabitTracker.Application.Common.Interfaces;
+﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
-using System.ComponentModel.DataAnnotations;
 using HabitTracker.Application.Services;
-using System.Text.RegularExpressions;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -25,37 +21,30 @@ namespace HabitTracker.Application.UseCases.Habits
 
         public async Task<Result<HabitResponseDTO>> AddNewHabitAsync(CreateHabitDTO habitDto)
         {
-            if (string.IsNullOrEmpty(habitDto.Title))
-                return Result<HabitResponseDTO>.Failure("Title can not be empty");
-
-            if (habitDto.Title.Length > 100)
-                return Result<HabitResponseDTO>.Failure("Title can not exceed 100 characters.");
-
             var userId = _userContextService.GetCurrentUserId();
 
             var existHabitWithSameTitle = await _habitRepository.GetByTitleAsync(userId, habitDto.Title);
             if (existHabitWithSameTitle != null)
                 return Result<HabitResponseDTO>.Failure("Already exists an habit with the same Title");
 
-            var habit = new HabitEntity
+            var habit = new HabitEntity(
+                userId: userId,
+                title: habitDto.Title,
+                description: habitDto.Description,
+                repeatPeriod: habitDto.RepeatPeriod,
+                repeatInterval: habitDto.RepeatInterval)
             {
-                Id = Guid.NewGuid(),
-                Title = habitDto.Title,
-                Description = habitDto.Description,
-                UserId = userId,
                 CategoryId = habitDto.CategoryId,
                 Priority = habitDto.Priority,
                 RepeatCount = habitDto.RepeatCount,
-                RepeatInterval = habitDto.RepeatInterval,
-                RepeatPeriod = habitDto.RepeatPeriod,
                 Duration = habitDto.Duration
             };
-            var isCreated = await _habitRepository.AddAsync(habit);
-
-            if (!isCreated)
-                return Result<HabitResponseDTO>.Failure("Could not create habit");
+            
+            await _habitRepository.AddAsync(habit);
 
             await _habitLogService.AddLogAsync(habit.Id, ActionType.Created);
+            await _habitRepository.SaveChangesAsync();
+
             var response = new HabitResponseDTO
             {
                 Id = habit.Id,
@@ -82,23 +71,13 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habit.UserId != userId)
                 return Result.Failure("Not authorized");
 
-            if (habit.LastTimeDoneAt?.Date == DateTime.UtcNow.Date)
-                return Result.Failure("Already marked this habit as done today.");
-
-            var existingLog = await _habitLogService.GetLogForHabitAndDayAsync(habitId, DateTime.UtcNow);
-
-            if (existingLog.Value != null)
-                return Result.Failure("Already marked this habit as done today.");
-
-            habit?.MarkHabitAsDone();
-            var result = await _habitRepository.UpdateAsync(habit);
-
-            if (!result)
-                return Result.Failure("Could not mark as done");
+            habit.MarkHabitAsDone();
 
             await _habitLogService.AddLogAsync(habitId, ActionType.Completed);
 
-            return result ? Result.Success() : Result.Failure("Could not mark as done");
+            await _habitRepository.SaveChangesAsync();
+
+            return Result.Success();
         }
 
         public async Task<Result> RemoveHabitAsync(Guid habitId)
@@ -112,14 +91,16 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habit.UserId != userId)
                 return Result.Failure("Not authorized");
 
-            var deleted = await _habitRepository.DeleteAsync(habit.Id);
+            if (habit.IsDeleted)
+                return Result.Success();
 
-            if (!deleted)
-                return Result.Failure("Couldn't delete this habit");
+            habit.SoftDelete();
 
             await _habitLogService.AddLogAsync(habitId, ActionType.Removed);
 
-            return deleted ? Result.Success() : Result.Failure("Couldn't delete this habit");
+            await _habitRepository.SaveChangesAsync();
+
+            return Result.Success();
         }
 
         public async Task<Result> UndoHabitCompletion(Guid habitId)
@@ -136,15 +117,13 @@ namespace HabitTracker.Application.UseCases.Habits
             if (!habit.IsCompleted)
                 return Result.Failure("Habit is not marked as completed");
 
-            habit?.UndoCompletion();
-            var result = await _habitRepository.UpdateAsync(habit);
-
-            if (!result)
-                return Result.Failure("Could not mark as undo this habit");
+            habit.UndoCompletion();
 
             await _habitLogService.AddLogAsync(habitId, ActionType.Undone);
 
-            return result ? Result.Success() : Result.Failure("Could not mark as undo this habit") ;
+            await _habitRepository.SaveChangesAsync();
+
+            return Result.Success();
         }
 
         public async Task<Result<HabitResponseDTO?>> UpdateHabitAsync(Guid habitId, CreateHabitDTO habitDto)
@@ -157,7 +136,7 @@ namespace HabitTracker.Application.UseCases.Habits
                 return Result<HabitResponseDTO?>.Failure("Habit not found");
 
             if (habit.UserId != userId)
-                return Result<HabitResponseDTO?>.Failure("Not authorize");
+                return Result<HabitResponseDTO?>.Failure("Not authorized");
 
             if (!string.Equals(habit.Title, habitDto.Title, StringComparison.OrdinalIgnoreCase))
             {
@@ -166,19 +145,19 @@ namespace HabitTracker.Application.UseCases.Habits
                     return Result<HabitResponseDTO?>.Failure("Already exists an habit with the same Title");
             }
 
-            habit.Title = habitDto.Title;
-            habit.Description = habitDto.Description;
-            habit.Priority = habitDto.Priority;
+            habit.UpdateDetails(
+                title: habitDto.Title,
+                description: habitDto.Description,
+                priority: habitDto.Priority
+            );
+
             habit.Duration = habitDto.Duration;
             habit.RepeatInterval = habitDto.RepeatInterval;
             habit.CategoryId = habitDto.CategoryId;
             
-            var result = await _habitRepository.UpdateAsync(habit);
-
-            if (!result)
-                return Result<HabitResponseDTO?>.Failure("Could not update this habit");
-
             await _habitLogService.AddLogAsync(habitId, ActionType.Updated);
+
+            await _habitRepository.SaveChangesAsync();
 
             var response = new HabitResponseDTO
             {
@@ -193,9 +172,7 @@ namespace HabitTracker.Application.UseCases.Habits
                 Duration = habit.Duration
             };
 
-            return result ? 
-                Result<HabitResponseDTO?>.Success(response) :
-                Result<HabitResponseDTO?>.Failure("Could not update this habit");
+            return Result<HabitResponseDTO?>.Success(response);
         }
     }
 }

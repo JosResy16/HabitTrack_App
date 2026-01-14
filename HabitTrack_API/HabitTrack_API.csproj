@@ -24,6 +24,7 @@
     <ProjectReference Include="..\HabitTracker.Application\HabitTracker.Application.csproj" />
     <ProjectReference Include="..\HabitTracker.Domain\HabitTracker.Domain.csproj" />
     <ProjectReference Include="..\HabitTracker.Infrastructure\HabitTracker.Infrastructure.csproj" />
+    <ProjectReference Include="..\HabitTracker.Shared\HabitTracker.Shared.csproj" />
   </ItemGroup>
 
 </Project>

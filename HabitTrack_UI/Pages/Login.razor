@@ -1,0 +1,59 @@
+﻿@page "/login"
+@* @layout AuthLayout; *@
+
+@using System.ComponentModel.DataAnnotations
+@using HabitTrack_UI.Models;
+
+<h3>Hello!</h3>
+<p>Login to get started</p>
+
+<EditForm Model="Model" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <div>
+        <label>Email:</label>
+        <InputText @bind-Value="Model.Email" placeholder="your email" />
+        <ValidationMessage For="@(() => Model.Email)" />
+    </div>
+
+    <div>
+        <label>Password:</label>
+        <InputText @bind-Value="Model.Password" type="password" placeholder="password" />
+        <ValidationMessage For="@(() => Model.Password)" />
+    </div>
+
+    @if (HasLoginError)
+    {
+        <p class="error">Invalid credentials</p>
+    }
+
+    <button type="submit" disabled="@IsSubmitting">
+        @(IsSubmitting ? "Loggin in..." : "Loggin")
+    </button>
+
+    <div>
+        <NavLink href="/register">I don't have an account</NavLink>
+    </div>
+    <p>Forgot password</p>
+</EditForm>
+
+@code {
+    private LoginModel Model = new LoginModel();
+    private bool IsSubmitting = false;
+
+    //will be manage with error from backend
+    private bool HasLoginError = false;
+
+    private async Task HandleLogin()
+    {
+        IsSubmitting = true;
+
+        //Simulating api call delay
+        await Task.Delay(3000);
+
+        HasLoginError = true;
+        IsSubmitting = false;
+
+        //restoring empty field in password
+        Model!.Password = string.Empty;
+    }
+}

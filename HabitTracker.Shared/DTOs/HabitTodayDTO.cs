@@ -1,7 +1,6 @@
-﻿using HabitTracker.Domain;
+﻿using HabitTracker.Shared.Enums;
 
-
-namespace HabitTracker.Application.DTOs
+namespace HabitTracker.Shared.DTOs
 {
     public class HabitTodayDTO
     {
@@ -9,7 +8,7 @@ namespace HabitTracker.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public Guid? CategoryId { get; set; }
-        public Priority? Priority { get; set; }
+        public HabitPriority? Priority { get; set; }
         public bool IsCompletedToday { get; set; }
         public DateTime? LastTimeDoneAt { get; set; }
     }

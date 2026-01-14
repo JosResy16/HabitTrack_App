@@ -29,20 +29,27 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var habit = new HabitEntity{ Id = habitId, Title = "Habit test", UserId = userId};
-            var habitDto = new CreateHabitDTO { Title = "Habit updated successfuly"};
+            var habit = new HabitEntity(userId, "title", null, null, null);
+            var habitDto = new CreateHabitDTO { Title = "new title"};
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync(habit);
-            _habitRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<HabitEntity>())).ReturnsAsync(true);
+            _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
+            _habitRepositoryMock.Setup(r => r.GetByTitleAsync(userId, It.IsAny<string>()))
+                .ReturnsAsync((HabitEntity?)null);
 
-            var response = await _habitService.UpdateHabitAsync(habitId, habitDto);
+            _habitLogRepositoryMock.Setup(r => r.AddLogAsync(habitId, ActionType.Updated))
+                .ReturnsAsync(Result.Success());
+            _habitRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
-            Assert.That(response, Is.Not.Null);
-            Assert.That(response.IsSuccess, Is.True);
-            Assert.That(response.Value?.Title, Is.EqualTo("Habit updated successfuly"));
+            var result = await _habitService.UpdateHabitAsync(habitId, habitDto);
 
-            _habitRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<HabitEntity>()), Times.Once);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value?.Title, Is.EqualTo("new title"));
+
+            _habitRepositoryMock.Verify(r => r.GetByTitleAsync(userId, It.IsAny<string>()), Times.Once);
+            _habitLogRepositoryMock.Verify(r => r.AddLogAsync(habitId, ActionType.Updated), Times.Once);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
 
         [Test]
@@ -50,15 +57,20 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var habit = new HabitEntity { Id = habitId, Title = "Habit test", UserId = userId };
-            var habitDto = new CreateHabitDTO { Title = "Habit updated successfuly" };
+            var habitDto = new CreateHabitDTO { Title = "new title" };
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            _habitRepositoryMock.Setup(x => x.UpdateAsync(habit)).ReturnsAsync(false);
+            _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
+                .ReturnsAsync((HabitEntity?)null);
 
-            var response = await _habitService.UpdateHabitAsync(habitId, habitDto);
+            var result = await _habitService.UpdateHabitAsync(habitId, habitDto);
 
-            Assert.That(response.ErrorMessage, Is.EqualTo("Habit not found"));
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ErrorMessage, Is.EqualTo("Habit not found"));
+
+            _habitRepositoryMock.Verify(r => r.GetByTitleAsync(userId, It.IsAny<string>()), Times.Never);
+            _habitLogRepositoryMock.Verify(r => r.AddLogAsync(habitId, ActionType.Updated), Times.Never);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
         [Test]
@@ -66,19 +78,20 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var anotherUser = new Guid();
-            var habit = new HabitEntity { Id = habitId, Title = "Habit test", UserId = anotherUser };
-            var habitDto = new CreateHabitDTO { Title = "Habit test" };
+            var anotherUser = Guid.NewGuid();
+            var habit = new HabitEntity(anotherUser, "title", null, null, null);
+            var habitDto = new CreateHabitDTO { Title = "new title" };
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
-            _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync(habit);
-            _habitRepositoryMock.Setup(x => x.UpdateAsync(habit)).ReturnsAsync(true);
+            _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var response = await _habitService.UpdateHabitAsync(habitId, habitDto);
 
-            Assert.That(response.ErrorMessage, Is.EqualTo("Not authorize"));
+            Assert.That(response.ErrorMessage, Is.EqualTo("Not authorized"));
+
             _habitRepositoryMock.Verify(r => r.GetByTitleAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
             _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
         [Test]
@@ -86,11 +99,10 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var existingHabitId = Guid.NewGuid();
 
-            var habit = new HabitEntity { Id = habitId, Title = "Old title", UserId = userId };
-            var habitDto = new CreateHabitDTO { Title = "New title" };
-            var existingHabit = new HabitEntity { Id = existingHabitId, Title = "New Title", UserId = userId };
+            var habit = new HabitEntity(userId, "old title", null, null, null);
+            var habitDto = new CreateHabitDTO { Title = "title" };
+            var existingHabit = new HabitEntity(Guid.NewGuid(), "title", null, null, null);
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync(habit);
@@ -100,26 +112,29 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
 
             Assert.That(response.IsSuccess, Is.False);
             Assert.That(response.ErrorMessage, Is.EqualTo("Already exists an habit with the same Title"));
+
             _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
-            _habitRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<HabitEntity>()), Times.Never);
+            _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
         [Test]
-        public async Task UpdateHabit_WhenUpdatingHabitFails_ReturnFailure()
+        public async Task UpdateHabit_WhenTitleDoesNotChange_DoesNotCheckForDuplicateTitle()
         {
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
-            var habit = new HabitEntity { Id = habitId, Title = "Habit test", UserId = userId };
-            var habitDto = new CreateHabitDTO { Title = "Habit test" };
+            var habit = new HabitEntity(userId, "same title", null, null, null);
+            var habitDto = new CreateHabitDTO { Title = "same title" };
 
             _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync(habit);
-            _habitRepositoryMock.Setup(r => r.GetByTitleAsync(userId, habitDto.Title)).ReturnsAsync((HabitEntity?)null);
 
-            var response = await _habitService.UpdateHabitAsync(habitId, habitDto);
+            var result = await _habitService.UpdateHabitAsync(habitId, habitDto);
 
-            Assert.That(response.ErrorMessage, Is.EqualTo("Could not update this habit"));
-            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            Assert.That(result.IsSuccess, Is.True);
+
+            _habitRepositoryMock.Verify(
+                r => r.GetByTitleAsync(It.IsAny<Guid>(), It.IsAny<string>()),
+                Times.Never);
         }
     }
 }

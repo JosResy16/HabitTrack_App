@@ -35,7 +35,6 @@ namespace HabitTracker.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("UserId")
@@ -56,9 +55,7 @@ namespace HabitTracker.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<TimeOnly?>("Duration")
                         .HasColumnType("time");
@@ -78,16 +75,15 @@ namespace HabitTracker.Infrastructure.Migrations
                     b.Property<int>("RepeatCount")
                         .HasColumnType("int");
 
-                    b.Property<int>("RepeatInterval")
+                    b.Property<int?>("RepeatInterval")
                         .HasColumnType("int");
 
-                    b.Property<int>("RepeatPeriod")
+                    b.Property<int?>("RepeatPeriod")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -107,14 +103,17 @@ namespace HabitTracker.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<int>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -129,19 +128,28 @@ namespace HabitTracker.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("PasswordHashed")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("RefreshToken")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserName")
                         .IsRequired()
@@ -149,17 +157,20 @@ namespace HabitTracker.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
             modelBuilder.Entity("HabitTracker.Domain.Entities.HabitEntity", b =>
                 {
                     b.HasOne("HabitTracker.Domain.Entities.CategoryEntity", "Category")
-                        .WithMany("Habits")
+                        .WithMany()
                         .HasForeignKey("CategoryId");
 
                     b.HasOne("HabitTracker.Domain.Entities.UserEntity", "User")
-                        .WithMany("Habits")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -178,16 +189,6 @@ namespace HabitTracker.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Habit");
-                });
-
-            modelBuilder.Entity("HabitTracker.Domain.Entities.CategoryEntity", b =>
-                {
-                    b.Navigation("Habits");
-                });
-
-            modelBuilder.Entity("HabitTracker.Domain.Entities.UserEntity", b =>
-                {
-                    b.Navigation("Habits");
                 });
 #pragma warning restore 612, 618
         }

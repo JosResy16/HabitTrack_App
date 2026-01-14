@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <Folder Include="Models\" />
+	<InternalsVisibleTo Include="Application.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
   </ItemGroup>
 
 </Project>
