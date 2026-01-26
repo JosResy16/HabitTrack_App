@@ -35,14 +35,14 @@ namespace HabitTracker.Application.UseCases.Habits
         public async Task<Result<IEnumerable<HabitLog>>> GetLogsByDateAsync(DateOnly date)
         {
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsByDateAsync(userId, date);
+            var logs = await _habitLogRepository.GetLogsByDateAsync(userId.Value, date);
             return Result<IEnumerable<HabitLog>>.Success(logs);
         }
 
         public async Task<Result<IEnumerable<HabitLog>>> GetLogsByHabitAsync(Guid habitId)
         {
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId, habitId);
+            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId.Value, habitId);
             return Result<IEnumerable<HabitLog>>.Success(logs);
         }
 
@@ -60,7 +60,7 @@ namespace HabitTracker.Application.UseCases.Habits
         public async Task<Result<IEnumerable<HabitLog>>> GetLogsBetweenDatesAsync(DateOnly startDate, DateOnly endDate)
         {
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsBetweenDatesAsync(userId, startDate, endDate);
+            var logs = await _habitLogRepository.GetLogsBetweenDatesAsync(userId.Value, startDate, endDate);
 
             return Result<IEnumerable<HabitLog>>.Success(logs);
         }
@@ -70,8 +70,8 @@ namespace HabitTracker.Application.UseCases.Habits
             var userId = _userContextService.GetCurrentUserId();
             IEnumerable<HabitLog> logs = actionType switch
             {
-                ActionType.Completed => await _habitLogRepository.GetCompletedLogsAsync(userId, day),
-                ActionType.Undone => await _habitLogRepository.GetPendingLogsAsync(userId, day),
+                ActionType.Completed => await _habitLogRepository.GetCompletedLogsAsync(userId.Value, day),
+                ActionType.Undone => await _habitLogRepository.GetPendingLogsAsync(userId.Value, day),
                 _ => Enumerable.Empty<HabitLog>()
             };
 

@@ -1,8 +1,4 @@
-﻿
-
-using HabitTracker.Application.Common.Interfaces;
-using HabitTracker.Application.DTOs;
-using HabitTracker.Application.Services;
+﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 using HabitTracker.Infrastructure.Context;

@@ -1,8 +1,16 @@
 ﻿@page "/login"
 @* @layout AuthLayout; *@
+@attribute [AllowAnonymous]
 
 @using System.ComponentModel.DataAnnotations
 @using HabitTrack_UI.Models;
+@using HabitTrack_UI.Services
+@using HabitTrack_UI.Services.Auth
+@using HabitTracker.Application.DTOs
+@using Microsoft.AspNetCore.Authorization
+
+@inject AuthService AuthService
+@inject NavigationManager Nav
 
 <h3>Hello!</h3>
 <p>Login to get started</p>
@@ -38,22 +46,34 @@
 
 @code {
     private LoginModel Model = new LoginModel();
-    private bool IsSubmitting = false;
-
-    //will be manage with error from backend
-    private bool HasLoginError = false;
+    private bool IsSubmitting;
+    private bool HasLoginError;
 
     private async Task HandleLogin()
     {
+        HasLoginError = false;
         IsSubmitting = true;
 
-        //Simulating api call delay
-        await Task.Delay(3000);
+        try
+        {
+            var request = new LoginRequest
+            {
+                Email = Model.Email,
+                Password = Model.Password
+            };
 
-        HasLoginError = true;
-        IsSubmitting = false;
+            await AuthService.LoginAsync(request);
 
-        //restoring empty field in password
-        Model!.Password = string.Empty;
+            Nav.NavigateTo("/");
+        }
+        catch
+        {
+            HasLoginError = true;
+        }
+        finally
+        {
+            IsSubmitting = false;
+            Model.Password = string.Empty;
+        }
     }
 }

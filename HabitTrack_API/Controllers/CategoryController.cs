@@ -5,9 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HabitTrack_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/category")]
     [ApiController]
-    [Authorize]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
@@ -17,21 +16,21 @@ namespace HabitTrack_API.Controllers
             _categoryService = categoryService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetCategoriesAsync()
         {
             var response = await _categoryService.GetCategories();
+
             if (!response.IsSuccess)
                 return BadRequest(response.ErrorMessage);
-
-            if (!response.Value!.Any())
-                return Ok(response.Value);
 
             return Ok(response.Value);
         }
 
+        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] CategoryResponseDTO category)
+        public async Task<IActionResult> CreateAsync([FromBody] CategoryRequestDTO category)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -41,9 +40,10 @@ namespace HabitTrack_API.Controllers
             if (!response.IsSuccess)
                 return BadRequest(response.ErrorMessage);
 
-            return CreatedAtAction(nameof(GetCategoriesAsync), new { categoryId = response.Value!.Id }, response.Value);
+            return Ok(response.Value);
         }
 
+        [Authorize]
         [HttpDelete("{categoryId}")]
         public async Task<IActionResult> RemoveAsync(Guid categoryId)
         {
@@ -54,8 +54,9 @@ namespace HabitTrack_API.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpPut("{categoryId}")]
-        public async Task<IActionResult> UpdateAsync(Guid categoryId, [FromBody] CategoryResponseDTO category)
+        public async Task<IActionResult> UpdateAsync(Guid categoryId, [FromBody] CategoryRequestDTO category)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

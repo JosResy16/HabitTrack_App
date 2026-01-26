@@ -35,7 +35,7 @@ namespace HabitTrack_API.Controllers
             return FromResult(result);
         }
 
-        [HttpGet("day")]
+        [HttpGet("today")]
         public async Task<IActionResult> GetTodayHabitsAsync([FromQuery]DateOnly? day)
         {
             var habits = await _habitQueryService.GetTodayHabitsAsync(day ?? DateOnly.FromDateTime(DateTime.UtcNow));
@@ -66,7 +66,7 @@ namespace HabitTrack_API.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result.ErrorMessage);
 
-            return CreatedAtAction(nameof(GetByIdAsync), new { habitId = result.Value?.Id }, result.Value);
+            return Ok(result);
         }
 
         [HttpPut("{habitId}")]
@@ -77,14 +77,14 @@ namespace HabitTrack_API.Controllers
         }
 
         [HttpPost("{habitId}/complete")]
-        public async Task<IActionResult> CompleteAsync(Guid habitId)
+        public async Task<IActionResult> MarkCompletedAsync(Guid habitId)
         {
             var response = await _habitService.MarkHabitAsDone(habitId);
             return FromResult(response);
         }
 
         [HttpDelete("{habitId}/complete")]
-        public async Task<IActionResult> UncompleteAsync(Guid habitId)
+        public async Task<IActionResult> UndoCompletionAsync(Guid habitId)
         {
             var result = await _habitService.UndoHabitCompletion(habitId);
             return FromResult(result);

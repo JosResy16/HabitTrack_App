@@ -23,12 +23,12 @@ namespace HabitTracker.Application.UseCases.Habits
         {
             var userId = _userContextService.GetCurrentUserId();
 
-            var existHabitWithSameTitle = await _habitRepository.GetByTitleAsync(userId, habitDto.Title);
+            var existHabitWithSameTitle = await _habitRepository.GetByTitleAsync(userId.Value, habitDto.Title);
             if (existHabitWithSameTitle != null)
                 return Result<HabitResponseDTO>.Failure("Already exists an habit with the same Title");
 
             var habit = new HabitEntity(
-                userId: userId,
+                userId: userId.Value,
                 title: habitDto.Title,
                 description: habitDto.Description,
                 repeatPeriod: habitDto.RepeatPeriod,
@@ -39,10 +39,10 @@ namespace HabitTracker.Application.UseCases.Habits
                 RepeatCount = habitDto.RepeatCount,
                 Duration = habitDto.Duration
             };
-            
-            await _habitRepository.AddAsync(habit);
 
+            await _habitRepository.AddAsync(habit);
             await _habitLogService.AddLogAsync(habit.Id, ActionType.Created);
+
             await _habitRepository.SaveChangesAsync();
 
             var response = new HabitResponseDTO
@@ -68,7 +68,7 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habit == null)
                 return Result.Failure("Habit not found");
 
-            if (habit.UserId != userId)
+            if (habit.UserId != userId.Value)
                 return Result.Failure("Not authorized");
 
             habit.MarkHabitAsDone();
@@ -88,7 +88,7 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habit == null)
                 return Result.Failure("Habit not found");
 
-            if (habit.UserId != userId)
+            if (habit.UserId != userId.Value)
                 return Result.Failure("Not authorized");
 
             if (habit.IsDeleted)
@@ -111,7 +111,7 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habit == null)
                 return Result.Failure("Habit not found");
 
-            if (habit.UserId != userId)
+            if (habit.UserId != userId.Value)
                 return Result.Failure("Not authorized");
 
             if (!habit.IsCompleted)
@@ -135,12 +135,12 @@ namespace HabitTracker.Application.UseCases.Habits
             if (habit == null)
                 return Result<HabitResponseDTO?>.Failure("Habit not found");
 
-            if (habit.UserId != userId)
+            if (habit.UserId != userId.Value)
                 return Result<HabitResponseDTO?>.Failure("Not authorized");
 
             if (!string.Equals(habit.Title, habitDto.Title, StringComparison.OrdinalIgnoreCase))
             {
-                var existHabitWithSameTitle = await _habitRepository.GetByTitleAsync(userId, habitDto.Title);
+                var existHabitWithSameTitle = await _habitRepository.GetByTitleAsync(userId.Value, habitDto.Title);
                 if (existHabitWithSameTitle != null && existHabitWithSameTitle.Id != habitId)
                     return Result<HabitResponseDTO?>.Failure("Already exists an habit with the same Title");
             }

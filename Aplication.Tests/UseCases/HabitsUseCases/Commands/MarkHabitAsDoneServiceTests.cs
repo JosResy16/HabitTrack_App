@@ -30,7 +30,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habitId = Guid.NewGuid();
             var habit = new HabitEntity(userId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync(habit);
 
             _habitLogServiceMock.Setup(l => l.AddLogAsync(habitId, ActionType.Completed))
@@ -49,8 +49,8 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         public async Task MarkHabitAsDone_WhenHabitDoesNotExist_ReturnsFailure()
         {
             var habitId = Guid.NewGuid();
-
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Guid.NewGuid());
+            var userId = Guid.NewGuid();
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync((HabitEntity?)null);
 
             var result = await _habitService.MarkHabitAsDone(habitId);
@@ -71,7 +71,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
 
             var habit = new HabitEntity(ownerId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(otherUserId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(otherUserId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync(habit);
 
             var result = await _habitService.MarkHabitAsDone(habitId);

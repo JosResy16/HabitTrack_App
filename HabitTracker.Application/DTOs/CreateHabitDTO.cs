@@ -7,8 +7,8 @@ namespace HabitTracker.Application.DTOs
     {
         [Required(ErrorMessage="Title can not be empty")]
         [MaxLength(50, ErrorMessage="Title too long max 50 chars")]
-
         public string Title { get; set; } = string.Empty;
+
         [MaxLength(150, ErrorMessage = "Description too long (max 150 chars)")]
         public string Description { get; set; } = string.Empty;
 

@@ -1,0 +1,15 @@
+﻿@using HabitTrack_UI.Services.Auth
+
+
+<button @onclick="Logout">Logout</button>
+
+@code {
+    [Inject] AuthService AuthService { get; set; } = default!;
+    [Inject] NavigationManager Nav { get; set; } = default!;
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+}

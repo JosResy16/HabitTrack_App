@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
+using HabitTracker.Application.Services;
 using HabitTracker.Application.UseCases.Habits;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
@@ -31,7 +32,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             var userId = Guid.NewGuid();
             var habit = new HabitEntity(userId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var result = await _habitQueryService.GetHabitByIdAsync(habit.Id);
@@ -45,7 +46,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
 
-            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((HabitEntity?) null);
 
             var result = await _habitQueryService.GetHabitByIdAsync(habitId);
@@ -62,7 +63,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             var habitId = Guid.NewGuid();
             var habit = new HabitEntity(otherUserId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var result = await _habitQueryService.GetHabitByIdAsync(habitId);
@@ -84,7 +85,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
                 new HabitEntity(userId, "Another title", null, null, null)
             };
 
-            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(u => u.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsAsync(It.IsAny<Guid>(), It.IsAny<Priority?>()))
                 .ReturnsAsync(habits);
 
@@ -101,7 +102,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             var userId = Guid.NewGuid();
             Priority? priority = null;
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsAsync(It.IsAny<Guid>(), priority))
                 .ReturnsAsync(new List<HabitEntity>());
 
@@ -124,7 +125,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
                 new HabitEntity(userId, "Another title", null, null, null) { Priority = priority }
             };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsAsync(It.IsAny<Guid>(), priority))
                 .ReturnsAsync(habits);
 
@@ -152,7 +153,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
                 new HabitLog(habitId, day.AddDays(-1), ActionType.Undone, new DateTime(2026, 1, 9, 20, 0, 0, DateTimeKind.Utc))
             };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
             _habitLogRepositoryMock.Setup(r => r.GetLogsByHabitIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
                 .ReturnsAsync(logs);
@@ -170,8 +171,8 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
         public async Task GetHabitHistory_WhenHabitNotFound_ReturnsFailure()
         {
             var habitId = Guid.NewGuid();
-
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Guid.NewGuid());
+            var userId = Guid.NewGuid();
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync((HabitEntity?)null);
 
             var response = await _habitQueryService.GetHabitHistoryAsync(habitId);
@@ -185,8 +186,8 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
         {
             var habitId = Guid.NewGuid();
             var habit = new HabitEntity(Guid.NewGuid(), "title", null, null, null);
-
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Guid.NewGuid());
+            var userId = Guid.NewGuid();
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync(habit);
 
             var response = await _habitQueryService.GetHabitHistoryAsync(habitId);
@@ -203,7 +204,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
 
             var habit = new HabitEntity(userId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync(habit);
             _habitLogRepositoryMock.Setup(r => r.GetLogsByHabitIdAsync(userId, habitId))
                 .ReturnsAsync(new List<HabitLog>());
@@ -229,7 +230,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
                 new HabitEntity(Guid.NewGuid(), "another title", null, null, null) { CategoryId = categoryId }
             };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsByCategoryIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
                 .ReturnsAsync(habits);
 
@@ -249,7 +250,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             var userId = Guid.NewGuid();
             var categoryId = Guid.NewGuid();
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsByCategoryIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
                                 .ReturnsAsync(new List<HabitEntity>());
 
@@ -280,7 +281,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
                 new HabitLog (habits[0].Id, day, ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc))
             };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsAsync(userId, null)).ReturnsAsync(habits);
             _habitLogRepositoryMock.Setup(r => r.GetLogsByDateAsync(userId, day))
                 .ReturnsAsync(logs);
@@ -298,7 +299,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             var userId = Guid.NewGuid();
             var day = DateOnly.FromDateTime(DateTime.UtcNow.Date);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsAsync(userId, null)).ReturnsAsync(new List<HabitEntity>());
             _habitLogRepositoryMock.Setup(r => r.GetLogsByDateAsync(userId, It.IsAny<DateOnly>()))
                 .ReturnsAsync(new List<HabitLog>());
@@ -322,7 +323,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
 
             _userContextServiceMock
                 .Setup(x => x.GetCurrentUserId())
-                .Returns(userId);
+                .Returns(Result<Guid>.Success(userId));
 
             _habitRepositoryMock
                 .Setup(r => r.GetHabitsAsync(userId, null))
@@ -354,7 +355,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
                 new HabitLog(habit.Id, day, ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc))
             };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetHabitsAsync(userId, null))
                 .ReturnsAsync(new List<HabitEntity> { habit });
 
@@ -389,7 +390,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
 
             _userContextServiceMock
                 .Setup(x => x.GetCurrentUserId())
-                .Returns(userId);
+                .Returns(Result<Guid>.Success(userId));
 
             _habitLogRepositoryMock
                 .Setup(r => r.GetLogsBetweenDatesAsync(userId, start, end))
@@ -413,7 +414,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             var end = DateOnly.FromDateTime(DateTime.UtcNow.Date);
             var userId = Guid.NewGuid();
 
-            _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitLogRepositoryMock.Setup(x => x.GetLogsBetweenDatesAsync(userId, start, end))
                 .ReturnsAsync(Enumerable.Empty<HabitLog>());
 
@@ -464,7 +465,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
 
             _userContextServiceMock
                 .Setup(x => x.GetCurrentUserId())
-                .Returns(userId);
+                .Returns(Result<Guid>.Success(userId));
 
             _habitLogRepositoryMock
                 .Setup(r => r.GetLogsByActionTypeAsync(userId, actionType, day))
@@ -490,7 +491,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
 
             _userContextServiceMock
                 .Setup(x => x.GetCurrentUserId())
-                .Returns(userId);
+                .Returns(Result<Guid>.Success(userId));
 
             _habitLogRepositoryMock
                 .Setup(r => r.GetLogsByActionTypeAsync(userId, actionType, day))

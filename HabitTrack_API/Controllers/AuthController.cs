@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace HabitTrack_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -29,6 +29,13 @@ namespace HabitTrack_API.Controllers
                 return BadRequest(result.ErrorMessage);
 
             return Ok(result.Value);
+        }
+
+        [HttpPost("login/test")]
+        [AllowAnonymous]
+        public IActionResult Test()
+        {
+            return Ok("LOGIN ENDPOINT REACHED");
         }
 
         [AllowAnonymous]
@@ -55,6 +62,7 @@ namespace HabitTrack_API.Controllers
             return Ok(result.Value);
         }
 
+        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
@@ -71,11 +79,12 @@ namespace HabitTrack_API.Controllers
         [HttpGet("me")]
         public IActionResult Me()
         {
-            return Ok(new
+            return Ok(new UserResponseDTO
             {
-                Id = User.GetUserId(),
-                UserName = User.Identity?.Name,
-                Role = User.FindFirst(ClaimTypes.Role)?.Value
+                Id = User.GetUserId().ToString(),
+                UserName = User.Identity?.Name!,
+                Email = User.FindFirst(ClaimTypes.Email)?.Value!,
+                Role = User.FindFirst(ClaimTypes.Role)?.Value!
             });
         }
     }

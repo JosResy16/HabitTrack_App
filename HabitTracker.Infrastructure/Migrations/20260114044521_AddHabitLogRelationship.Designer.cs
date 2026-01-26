@@ -4,6 +4,7 @@ using HabitTracker.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HabitTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(HabitTrackDBContext))]
-    partial class HabitTrackDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260114044521_AddHabitLogRelationship")]
+    partial class AddHabitLogRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,9 +56,6 @@ namespace HabitTracker.Infrastructure.Migrations
 
                     b.Property<Guid?>("CategoryId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -186,17 +186,12 @@ namespace HabitTracker.Infrastructure.Migrations
             modelBuilder.Entity("HabitTracker.Domain.Entities.HabitLog", b =>
                 {
                     b.HasOne("HabitTracker.Domain.Entities.HabitEntity", "Habit")
-                        .WithMany("Logs")
+                        .WithMany()
                         .HasForeignKey("HabitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Habit");
-                });
-
-            modelBuilder.Entity("HabitTracker.Domain.Entities.HabitEntity", b =>
-                {
-                    b.Navigation("Logs");
                 });
 #pragma warning restore 612, 618
         }

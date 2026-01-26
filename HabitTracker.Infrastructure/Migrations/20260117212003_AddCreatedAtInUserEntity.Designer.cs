@@ -4,6 +4,7 @@ using HabitTracker.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HabitTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(HabitTrackDBContext))]
-    partial class HabitTrackDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260117212003_AddCreatedAtInUserEntity")]
+    partial class AddCreatedAtInUserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

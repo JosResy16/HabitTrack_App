@@ -11,21 +11,20 @@ namespace HabitTracker.Domain.Entities
             if (!Enum.IsDefined(typeof(ActionType), actionType))
                 throw new ArgumentException("Invalid action type");
 
-            Id = Guid.NewGuid();
             HabitId = habitId;
             Date = date;
             ActionType = actionType;
             CreatedAt = createdAt;
         }
 
-        //used by tests
+        [Obsolete("For testing only", true)]
         internal HabitLog(Guid habitId, DateOnly date, ActionType actionType, HabitEntity habit, DateTime createdAt)
             : this(habitId, date, actionType, createdAt)
         {
             Habit = habit;
         }
 
-        public Guid Id { get; private set; }
+        public Guid Id { get; private set; } = Guid.NewGuid();
         public Guid HabitId { get; private set; }
         public DateOnly Date { get; private set; }
         public ActionType ActionType { get; private set; }

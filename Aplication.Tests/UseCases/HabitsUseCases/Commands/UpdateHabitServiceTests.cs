@@ -32,7 +32,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habit = new HabitEntity(userId, "title", null, null, null);
             var habitDto = new CreateHabitDTO { Title = "new title"};
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
             _habitRepositoryMock.Setup(r => r.GetByTitleAsync(userId, It.IsAny<string>()))
                 .ReturnsAsync((HabitEntity?)null);
@@ -59,7 +59,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habitId = Guid.NewGuid();
             var habitDto = new CreateHabitDTO { Title = "new title" };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
                 .ReturnsAsync((HabitEntity?)null);
 
@@ -82,7 +82,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habit = new HabitEntity(anotherUser, "title", null, null, null);
             var habitDto = new CreateHabitDTO { Title = "new title" };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var response = await _habitService.UpdateHabitAsync(habitId, habitDto);
@@ -104,7 +104,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habitDto = new CreateHabitDTO { Title = "title" };
             var existingHabit = new HabitEntity(Guid.NewGuid(), "title", null, null, null);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync(habit);
             _habitRepositoryMock.Setup(r => r.GetByTitleAsync(userId, habitDto.Title)).ReturnsAsync(existingHabit);
             
@@ -125,7 +125,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habit = new HabitEntity(userId, "same title", null, null, null);
             var habitDto = new CreateHabitDTO { Title = "same title" };
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(habitId)).ReturnsAsync(habit);
 
             var result = await _habitService.UpdateHabitAsync(habitId, habitDto);

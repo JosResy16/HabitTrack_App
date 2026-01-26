@@ -2,9 +2,8 @@
 {
     public enum Period
     {
-        Day,
-        Week,
-        Month,
-        Year
+        Daily,
+        Weekly,
+        Monthly
     }
 }

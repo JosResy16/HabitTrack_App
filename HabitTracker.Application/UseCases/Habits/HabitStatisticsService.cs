@@ -24,7 +24,7 @@ namespace HabitTracker.Application.UseCases.Habits
                 return Result<double>.Failure("Start date cannot be greater than end date.");
 
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsBetweenDatesAsync(userId, start, end);
+            var logs = await _habitLogRepository.GetLogsBetweenDatesAsync(userId.Value, start, end);
             
             return Result<double>.Success(CalculateCompletionRate(logs));
         }
@@ -35,7 +35,7 @@ namespace HabitTracker.Application.UseCases.Habits
                 return Result<double>.Failure("Start date cannot be greater than end date.");
 
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId, habitId);
+            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId.Value, habitId);
 
             var logsInRange = logs.Where(l => l.Date >= start && l.Date <= end);
 
@@ -46,7 +46,7 @@ namespace HabitTracker.Application.UseCases.Habits
         {
             //Returns logs ordered by descending
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId, habitId);
+            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId.Value, habitId);
 
             var completedLogs = logs
                 .Where(l => l.ActionType == ActionType.Completed);
@@ -58,7 +58,7 @@ namespace HabitTracker.Application.UseCases.Habits
         {
             //Returns logs ordered by descending
             var userId = _userContextService.GetCurrentUserId();
-            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId, habitId);
+            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId.Value, habitId);
 
             //Only logs completed and reorder to ascending
             var completedLogs = logs

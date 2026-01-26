@@ -1,6 +1,5 @@
 ﻿using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
-using HabitTracker.Domain.Entities;
 
 
 namespace HabitTracker.Application.UseCases.Categories

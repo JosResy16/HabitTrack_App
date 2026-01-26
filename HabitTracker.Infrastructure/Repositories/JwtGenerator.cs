@@ -22,10 +22,11 @@ namespace HabitTracker.Infrastructure.Repositories
             {
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.Role.ToString())
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim(ClaimTypes.Email, user.Email.ToString())
             };
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_appSettings.Token)!);
+                Encoding.UTF8.GetBytes(_appSettings.Token!));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
             var tokenDescriptor = new JwtSecurityToken(

@@ -29,7 +29,7 @@ namespace HabitTracker.Domain.Entities
             IsDeleted = false;
         }
 
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; } = Guid.NewGuid();
 
         [Required(ErrorMessage= "Title is necesary")]
         public string Title { get; set; } = string.Empty;
@@ -49,6 +49,11 @@ namespace HabitTracker.Domain.Entities
         public Period? RepeatPeriod { get; set; }
         public TimeOnly? Duration { get; set; }
         public DateTime? LastTimeDoneAt { get; private set; }
+
+        public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+
+        public IReadOnlyCollection<HabitLog> Logs => _logs;
+        private readonly List<HabitLog> _logs = new();
 
         public void SoftDelete()
         {

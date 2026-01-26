@@ -31,7 +31,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var userId = Guid.NewGuid();
             var habit = new HabitEntity(userId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
             _habitLogRepositoryMock.Setup(r => r.AddLogAsync(habit.Id, ActionType.Removed))
                 .ReturnsAsync(Result.Success());
@@ -52,7 +52,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var userId = Guid.NewGuid();
             var habitId = Guid.NewGuid();
 
-            _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
                 .ReturnsAsync((HabitEntity?)null);
 
@@ -73,7 +73,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habitId = Guid.NewGuid();
             var habit = new HabitEntity(otherUserId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var result = await _habitService.RemoveHabitAsync(habitId);
@@ -94,7 +94,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
 
             habit.SoftDelete();
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId)).ReturnsAsync(habit);
 
             var result = await _habitService.RemoveHabitAsync(habitId);

@@ -23,6 +23,11 @@ namespace HabitTracker.Infrastructure.Context
 
             modelBuilder.Entity<CategoryEntity>()
                 .HasQueryFilter(c => !c.IsDeleted);
+
+            modelBuilder.Entity<HabitLog>()
+                .HasOne(l => l.Habit)
+                .WithMany(h => h.Logs)
+                .HasForeignKey(l => l.HabitId);
         }
     } 
 }

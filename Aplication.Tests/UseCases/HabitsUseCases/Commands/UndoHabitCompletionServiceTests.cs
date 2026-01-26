@@ -31,7 +31,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habit = new HabitEntity(userId, "title", null, null, null);
             habit.MarkHabitAsDone();
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
             _habitLogRepositoryMock.Setup(l => l.AddLogAsync(habitId, ActionType.Undone)).ReturnsAsync(Result.Success());
             _habitRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
@@ -50,7 +50,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         {
             var userId = Guid.NewGuid();
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((HabitEntity?)null);
 
             var result = await _habitService.UndoHabitCompletion(Guid.NewGuid());
@@ -70,7 +70,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habitId = Guid.NewGuid();
             var habit = new HabitEntity(otherUserId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var result = await _habitService.UndoHabitCompletion(habitId);
@@ -89,7 +89,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             var habitId = Guid.NewGuid();
             var habit = new HabitEntity(userId, "title", null, null, null);
 
-            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(userId);
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
 
             var result = await _habitService.UndoHabitCompletion(habitId);

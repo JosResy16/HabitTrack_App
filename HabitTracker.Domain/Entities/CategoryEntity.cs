@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
 
 namespace HabitTracker.Domain.Entities
 {
     public class CategoryEntity
     {
-        private CategoryEntity() { }
-
         public CategoryEntity(Guid userId, string title)
         {
             if (string.IsNullOrWhiteSpace(title))
@@ -17,6 +15,7 @@ namespace HabitTracker.Domain.Entities
             CreatedAt = DateTime.UtcNow;
             IsDeleted = false;
         }
+
         public Guid Id { get; private set; }
         public string? Title { get; private set; }
         public Guid UserId { get; private set; }

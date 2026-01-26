@@ -2,11 +2,6 @@
 using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
 using HabitTracker.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HabitTracker.Application.UseCases.Categories
 {
@@ -25,8 +20,7 @@ namespace HabitTracker.Application.UseCases.Categories
         {
             var userId = _userContext.GetCurrentUserId();
 
-            var categoryEntity = new CategoryEntity(userId, title);
-
+            var categoryEntity = new CategoryEntity(userId.Value, title);
 
             await _categoryRepository.AddCategoryAsync(categoryEntity);
             await _categoryRepository.SaveChangesAsync();
@@ -37,7 +31,7 @@ namespace HabitTracker.Application.UseCases.Categories
         public async Task<Result> DeleteCategory(Guid categoryId)
         {
             var userId = _userContext.GetCurrentUserId();
-            var category = await _categoryRepository.GetCategoryByIdAsync(userId, categoryId);
+            var category = await _categoryRepository.GetCategoryByIdAsync(userId.Value, categoryId);
 
             if (category == null)
                 return Result.Failure("Category not found");
@@ -51,7 +45,7 @@ namespace HabitTracker.Application.UseCases.Categories
         public async Task<Result<IEnumerable<CategoryResponseDTO>>> GetCategories()
         {
             var userId = _userContext.GetCurrentUserId();
-            var categories = await _categoryRepository.GetCategoriesByUserIdAsync(userId);
+            var categories = await _categoryRepository.GetCategoriesByUserIdAsync(userId.Value);
 
             var categoriesDto = categories.Select(MapToDto);
 
@@ -62,7 +56,7 @@ namespace HabitTracker.Application.UseCases.Categories
         {
             var userId = _userContext.GetCurrentUserId();
 
-            var category = await _categoryRepository.GetCategoryByIdAsync(userId, categoryId);
+            var category = await _categoryRepository.GetCategoryByIdAsync(userId.Value, categoryId);
 
             if (category == null)
                 return Result.Failure("category do not found");
