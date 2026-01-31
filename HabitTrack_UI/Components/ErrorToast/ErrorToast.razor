@@ -1,0 +1,43 @@
+﻿@using HabitTrack_UI.Models.ErrorModels
+@using HabitTrack_UI.Services
+
+@inject ErrorService ErrorService
+
+@if (_visible)
+{
+    <div class="error-toast">
+        @_message
+    </div>
+}
+
+@code {
+    private bool _visible;
+    private string? _message;
+
+    protected override void OnInitialized()
+    {
+        ErrorService.OnError += HandleError;
+    }
+
+    private void HandleError(AppError error)
+    {
+        _message = error.Message;
+        _visible = true;
+
+        StateHasChanged();
+
+        _ = HideLater();
+    }
+
+    private async Task HideLater()
+    {
+        await Task.Delay(4000);
+        _visible = false;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ErrorService.OnError -= HandleError;
+    }
+}

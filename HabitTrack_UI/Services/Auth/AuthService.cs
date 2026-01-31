@@ -1,6 +1,7 @@
 ﻿using HabitTrack_UI.Utils;
 using HabitTracker.Application.DTOs;
-using Microsoft.AspNetCore.Components.Authorization;
+using HabitTrack_UI.Models.ErrorModels;
+using HabitTrack_UI.Services.Api;
 
 namespace HabitTrack_UI.Services.Auth;
 public class AuthService
@@ -9,17 +10,20 @@ public class AuthService
     private readonly JwtAuthenticationStateProvider _authenticationStateProvider;
     private readonly TokenStorageService _tokenStorageService;
     private readonly UserSession _userSession;
+    private readonly ErrorService _errorService;
 
     public AuthService(
         AuthApiClient authApiClient,
         JwtAuthenticationStateProvider authenticationStateProvider,
         TokenStorageService tokenStorageService,
-        UserSession userSession)
+        UserSession userSession,
+        ErrorService errorService)
     {
         _authApiClient = authApiClient;
         _authenticationStateProvider = authenticationStateProvider;
         _tokenStorageService = tokenStorageService;
         _userSession = userSession;
+        _errorService = errorService;
     }
 
     public async Task LoginAsync(LoginRequest request)
@@ -30,8 +34,20 @@ public class AuthService
             response.AccessToken,
             response.RefreshToken);
 
-        ((JwtAuthenticationStateProvider)_authenticationStateProvider)
-            .NotifyUserAuthentication(response.AccessToken);
+        var principal = JwtUtils.TryCreatePrincipal(response.AccessToken);
+        if (principal is null)
+        {
+            await LogoutAsync();
+            _errorService.Raise(new AppError
+            {
+                Title = "Login failed",
+                Message = "An invalid token was received from the server.",
+                Type = ErrorType.Server,
+            });
+            return;
+        }
+
+        _authenticationStateProvider.NotifyUserAuthenticated(principal);
 
         await _userSession.Initialize(response.AccessToken);
     }
@@ -41,18 +57,38 @@ public class AuthService
         await _tokenStorageService.Clear();
         _userSession.Clear();
 
-        ((JwtAuthenticationStateProvider)_authenticationStateProvider)
-            .NotifyUserLogout();
-    }
-
-    public async Task RefreshTokenAsync()
-    {
-        throw new NotImplementedException();
+        _authenticationStateProvider.NotifyUserLogout();
     }
 
     public async Task<bool> TryRefreshTokenAsync()
     {
-        throw new NotImplementedException();
+        var refreshToken = await _tokenStorageService.GetRefreshToken();
+        if (string.IsNullOrEmpty(refreshToken))
+            return false;
+
+        var response = await _authApiClient.RefreshToken(new RefreshTokenRequestDTO { RefreshToken = refreshToken});
+
+        await _tokenStorageService.SetTokens(
+           response.AccessToken,
+           response.RefreshToken);
+
+        var principal = JwtUtils.TryCreatePrincipal(response.AccessToken);
+        if (principal is null)
+        {
+            _errorService.Raise(new AppError
+            {
+                Title = "Unauthorized",
+                Message = "Invalid token received from server",
+                Type = ErrorType.Unauthorized,
+            });
+
+            return false;
+        }
+
+        _authenticationStateProvider.NotifyUserAuthenticated(principal);
+        await _userSession.Initialize(response.AccessToken);
+
+        return true;
     }
 
     public async Task InitializeAsync()

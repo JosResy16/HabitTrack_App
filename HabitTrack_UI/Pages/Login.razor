@@ -4,7 +4,9 @@
 
 @using System.ComponentModel.DataAnnotations
 @using HabitTrack_UI.Models;
+@using HabitTrack_UI.Models.ErrorModels
 @using HabitTrack_UI.Services
+@using HabitTrack_UI.Services.AppErrorService
 @using HabitTrack_UI.Services.Auth
 @using HabitTracker.Application.DTOs
 @using Microsoft.AspNetCore.Authorization
@@ -29,9 +31,9 @@
         <ValidationMessage For="@(() => Model.Password)" />
     </div>
 
-    @if (HasLoginError)
+    @if (LoginErrorMessage is not null)
     {
-        <p class="error">Invalid credentials</p>
+        <p class="error">@LoginErrorMessage</p>
     }
 
     <button type="submit" disabled="@IsSubmitting">
@@ -47,11 +49,11 @@
 @code {
     private LoginModel Model = new LoginModel();
     private bool IsSubmitting;
-    private bool HasLoginError;
+    private string? LoginErrorMessage;
 
     private async Task HandleLogin()
     {
-        HasLoginError = false;
+        LoginErrorMessage = null;
         IsSubmitting = true;
 
         try
@@ -66,9 +68,12 @@
 
             Nav.NavigateTo("/");
         }
-        catch
+        catch (AppException ex)
         {
-            HasLoginError = true;
+            if (ex.Error.Type == ErrorType.Unauthorized)
+            {
+                LoginErrorMessage = "Invalid credentials";
+            }
         }
         finally
         {

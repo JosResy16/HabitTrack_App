@@ -1,5 +1,5 @@
 using HabitTrack_UI;
-using HabitTrack_UI.Services;
+using HabitTrack_UI.Services.Api;
 using HabitTrack_UI.Services.Auth;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;

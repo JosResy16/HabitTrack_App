@@ -1,4 +1,6 @@
-﻿namespace HabitTrack_UI.Services;
+﻿using HabitTrack_UI.Services.Api;
+
+namespace HabitTrack_UI.Services;
 public class UserSession
 {
     private readonly AuthApiClient _authApiClient;
