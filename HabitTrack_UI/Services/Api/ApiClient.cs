@@ -1,11 +1,22 @@
 ﻿using HabitTrack_UI.Services.AppErrorService;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace HabitTrack_UI.Services.Api;
 public class ApiClient
 {
     private readonly HttpClient _http;
     private readonly ErrorService _errorService;
+    private static readonly JsonSerializerOptions _jsonOptions = 
+        new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters =
+            {
+                new JsonStringEnumConverter()
+            }
+        };
 
     public ApiClient(
         HttpClient http,
@@ -68,7 +79,7 @@ public class ApiClient
             if (response.Content.Headers.ContentLength == 0)
                 return default;
 
-            return await response.Content.ReadFromJsonAsync<T>();
+            return await response.Content.ReadFromJsonAsync<T>(_jsonOptions);
         }
         catch (HttpRequestException ex)
         {
@@ -77,4 +88,5 @@ public class ApiClient
             throw new AppException(error);
         }
     }
+
 }

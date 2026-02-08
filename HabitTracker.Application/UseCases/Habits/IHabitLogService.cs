@@ -13,6 +13,6 @@ namespace HabitTracker.Application.UseCases.Habits
         Task<Result<HabitLog?>> GetLogForHabitAndDayAsync(Guid habitId, DateOnly day);
         Task<Result<IEnumerable<HabitLog>>> GetLogsBetweenDatesAsync(DateOnly startDate, DateOnly endDate);
         Task<Result<IEnumerable<HabitLog>>> GetLogsByActionTypeAsync(ActionType actionType, DateOnly day);
-
+        Task<Result<HabitLog?>> GetLastLogForDateAsync(Guid userId, Guid habitId, DateOnly date);
     }
 }

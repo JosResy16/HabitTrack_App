@@ -1,5 +1,5 @@
 ﻿@page "/login"
-@* @layout AuthLayout; *@
+@layout AuthLayout;
 @attribute [AllowAnonymous]
 
 @using System.ComponentModel.DataAnnotations
@@ -14,37 +14,59 @@
 @inject AuthService AuthService
 @inject NavigationManager Nav
 
-<h3>Hello!</h3>
-<p>Login to get started</p>
+<div class="card shadow-sm p-4" style="width: 100%; max-width: 420px;">
 
-<EditForm Model="Model" OnValidSubmit="HandleLogin">
-    <DataAnnotationsValidator />
-    <div>
-        <label>Email:</label>
-        <InputText @bind-Value="Model.Email" placeholder="your email" />
-        <ValidationMessage For="@(() => Model.Email)" />
+    <div class="mb-4 text-center">
+        <h3 class="fw-bold">Hello!</h3>
+        <p class="text-muted mb-0">Login to get started</p>
     </div>
 
-    <div>
-        <label>Password:</label>
-        <InputText @bind-Value="Model.Password" type="password" placeholder="password" />
-        <ValidationMessage For="@(() => Model.Password)" />
-    </div>
+    <EditForm Model="Model" OnValidSubmit="HandleLogin">
+        <DataAnnotationsValidator />
 
-    @if (LoginErrorMessage is not null)
-    {
-        <p class="error">@LoginErrorMessage</p>
-    }
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <InputText class="form-control"
+                        @bind-Value="Model.Email"
+                        placeholder="you@example.com" />
+            <ValidationMessage For="@(() => Model.Email)" class="text-danger small" />
+        </div>
 
-    <button type="submit" disabled="@IsSubmitting">
-        @(IsSubmitting ? "Loggin in..." : "Loggin")
-    </button>
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <InputText class="form-control"
+                        type="password"
+                        @bind-Value="Model.Password"
+                        placeholder="Your password" />
+            <ValidationMessage For="@(() => Model.Password)" class="text-danger small" />
+        </div>
 
-    <div>
-        <NavLink href="/register">I don't have an account</NavLink>
-    </div>
-    <p>Forgot password</p>
-</EditForm>
+        @if (LoginErrorMessage is not null)
+        {
+            <div class="alert alert-danger py-2">
+                @LoginErrorMessage
+            </div>
+        }
+
+        <button type="submit"
+                class="btn btn-primary w-100"
+                disabled="@IsSubmitting">
+            @(IsSubmitting ? "Logging in..." : "Login")
+        </button>
+
+        <div class="text-center mt-3">
+            <NavLink href="/register" class="d-block">
+                I don't have an account
+            </NavLink>
+
+            <a href="#" class="text-muted small">
+                Forgot password?
+            </a>
+        </div>
+    </EditForm>
+
+</div>
+
 
 @code {
     private LoginModel Model = new LoginModel();

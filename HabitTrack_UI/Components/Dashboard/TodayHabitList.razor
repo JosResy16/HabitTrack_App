@@ -1,28 +1,37 @@
 ﻿
 
-<div class="container">
-    <p>Your Habits</p>
-    @if (!Habits.Any())
-    {
-        <div>
-            <p>No habits yet!</p>
-            <p>Add your first habit above to get started on your journey.</p>
-        </div>
-    }
-    else
-    {
-        <div class="list-group">
-            @foreach (var habit in Habits)
-            {
-                <HabitItem @key="habit.Id" 
-                    Habit="habit"
-                           OnToggleCompleted="OnToggleHabit" />
-            }
-        </div>
-    }
+<div class="card shadow-sm">
+    <div class="card-body">
+
+        <h5 class="card-title mb-3">
+            @Title
+        </h5>
+
+        @if (!Habits.Any())
+        {
+            <div class="text-center text-muted py-4">
+                <p class="mb-1 fw-semibold">No habits yet</p>
+                <small>Add your first habit to get started on your journey.</small>
+            </div>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var habit in Habits)
+                {
+                    <li class="list-group-item px-0">
+                        <HabitItem @key="habit.Id"
+                                   Habit="habit"
+                                   OnToggleCompleted="OnToggleHabit" />
+                    </li>
+                }
+            </ul>
+        }
+    </div>
 </div>
 
 @code {
     [Parameter] public List<HabitTodayDTO> Habits { get; set; } = [];
     [Parameter] public EventCallback<HabitTodayDTO> OnToggleHabit { get; set; }
+    [Parameter] public string Title { get; set; } = "Your Habits";
 }

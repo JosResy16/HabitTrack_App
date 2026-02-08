@@ -1,7 +1,10 @@
 ﻿@using HabitTrack_UI.Services.Auth
 
 
-<button @onclick="Logout">Logout</button>
+<button class="btn btn-outline-secondary"
+        @onclick="Logout">
+    Logout
+</button>
 
 @code {
     [Inject] AuthService AuthService { get; set; } = default!;

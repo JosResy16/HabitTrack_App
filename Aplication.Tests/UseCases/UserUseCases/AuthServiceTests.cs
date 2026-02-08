@@ -107,8 +107,7 @@ namespace Aplication.Tests.UseCases.User
             {
                 Email = _email,
                 UserName = _username,
-                Password = _password,
-                ConfirmPassword = _password
+                Password = _password
             };
 
             var user = new UserEntity(request.UserName, request.Email);
@@ -132,8 +131,7 @@ namespace Aplication.Tests.UseCases.User
             {
                 UserName = _username,
                 Email = _email,
-                Password = _password,
-                ConfirmPassword = _password
+                Password = _password
             };
             var registeredUser = new UserEntity("AnohterUserName", _email);
 

@@ -2,19 +2,20 @@
 using HabitTracker.Application.DTOs;
 using HabitTrack_UI.Models.ErrorModels;
 using HabitTrack_UI.Services.Api;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace HabitTrack_UI.Services.Auth;
 public class AuthService
 {
     private readonly AuthApiClient _authApiClient;
-    private readonly JwtAuthenticationStateProvider _authenticationStateProvider;
+    private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly TokenStorageService _tokenStorageService;
     private readonly UserSession _userSession;
     private readonly ErrorService _errorService;
 
     public AuthService(
         AuthApiClient authApiClient,
-        JwtAuthenticationStateProvider authenticationStateProvider,
+        AuthenticationStateProvider authenticationStateProvider,
         TokenStorageService tokenStorageService,
         UserSession userSession,
         ErrorService errorService)
@@ -47,9 +48,14 @@ public class AuthService
             return;
         }
 
-        _authenticationStateProvider.NotifyUserAuthenticated(principal);
+        (_authenticationStateProvider as JwtAuthenticationStateProvider)?.NotifyUserAuthenticated(principal);
 
         await _userSession.Initialize(response.AccessToken);
+    }
+
+    public async Task RegisterAsync(RegisterRequest request)
+    {
+        await _authApiClient.Register(request);
     }
 
     public async Task LogoutAsync()
@@ -57,7 +63,7 @@ public class AuthService
         await _tokenStorageService.Clear();
         _userSession.Clear();
 
-        _authenticationStateProvider.NotifyUserLogout();
+        (_authenticationStateProvider as JwtAuthenticationStateProvider)?.NotifyUserLogout();
     }
 
     public async Task<bool> TryRefreshTokenAsync()
@@ -85,7 +91,7 @@ public class AuthService
             return false;
         }
 
-        _authenticationStateProvider.NotifyUserAuthenticated(principal);
+        (_authenticationStateProvider as JwtAuthenticationStateProvider)?.NotifyUserAuthenticated(principal);
         await _userSession.Initialize(response.AccessToken);
 
         return true;
@@ -106,7 +112,7 @@ public class AuthService
             return;
         }
 
-        _authenticationStateProvider.NotifyUserAuthenticated(principal);
+        (_authenticationStateProvider as JwtAuthenticationStateProvider)?.NotifyUserAuthenticated(principal);
         await _userSession.LoadAsync();
     }
 

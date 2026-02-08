@@ -1,0 +1,24 @@
+﻿@using HabitTracker.Application.DTOs
+
+<div class="row g-3">
+    <div class="col-12 col-md-6">
+        <TodayProgress Completed="Summary.CompletedHabitsToday"
+                       Total="Summary.TotalHabitsToday" />
+    </div>
+
+    <div class="col-6 col-md-3">
+        <StatCard Title="Current Streak"
+                  Value="@($"{Summary.CurrentStreak} days")"
+                  Subtitle="At least one habit per day" />
+    </div>
+
+    <div class="col-6 col-md-3">
+        <StatCard Title="First habit completed"
+                  Value="@(Summary.FirstCompletionAt?.ToString("HH:mm") ?? "-")"
+                  Subtitle="Today" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public TodaySummaryDTO Summary { get; set; } = default!;
+}

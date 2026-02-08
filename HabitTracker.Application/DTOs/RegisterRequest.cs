@@ -16,9 +16,5 @@ namespace HabitTracker.Application.DTOs
         [Required(ErrorMessage = "Password can not be empty")]
         [MinLength(8, ErrorMessage = "Password must contain at least 8 characters")]
         public string Password { get; set; } = string.Empty;
-
-        [Required]
-        [Compare(nameof(Password), ErrorMessage ="passwords do not match")]
-        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

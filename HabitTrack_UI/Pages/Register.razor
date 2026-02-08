@@ -1,52 +1,106 @@
 ﻿@page "/register";
 @layout AuthLayout;
+@attribute [AllowAnonymous]
 
 @using HabitTrack_UI.Models;
-@using System.ComponentModel.DataAnnotations;
+@using HabitTrack_UI.Services
+@using HabitTrack_UI.Services.AppErrorService
+@using HabitTrack_UI.Services.Auth
+@using HabitTracker.Application.DTOs
+@using Microsoft.AspNetCore.Authorization
 
-<h3>Helllo!</h3>
-<p>Sign up to get started</p>
+@inject AuthService AuthService
+@inject NavigationManager Nav
 
-<EditForm Model="Model" OnValidSubmit="RegisterHandling">
-    <DataAnnotationsValidator/>
-    <div>
-        <label>Email</label>
-        <InputText @bind-Value="Model.Email" placeholder="Your email here"/>
-        <ValidationMessage For="@(() => Model.Email)" />
-    </div>
-    <div>
-        <label>Password</label>
-        <InputText type="password" @bind-Value="Model.Password" placeholder="Password" />
-        <ValidationMessage For="@(() => Model.Password)" />
+<div class="card shadow-sm p-4" style="width: 100%; max-width: 420px;">
+
+    <div class="mb-4 text-center">
+        <h3 class="fw-bold">Hello!</h3>
+        <p class="text-muted mb-0">Sign up to get started</p>
     </div>
 
-    <div>
-        <label>Confirm Password</label>
-        <InputText type="password" @bind-Value="Model.ConfirmPassword" placeholder="Confirm password" />
-        <ValidationMessage For="@(() => Model.ConfirmPassword)" />
-    </div>
+    <EditForm Model="Model" OnValidSubmit="HandleRegister">
+        <DataAnnotationsValidator />
 
-    <button type="submit" disabled="@IsSubmitting">
-        @(IsSubmitting ? "Registering..." : "Register")
-    </button>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <InputText class="form-control"
+                        @bind-Value="Model.Email"
+                        placeholder="you@example.com" />
+            <ValidationMessage For="@(() => Model.Email)" class="text-danger small" />
+        </div>
 
-    <div>
-        <NavLink href="/login">I already have an account</NavLink>
-    </div>
-</EditForm>
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <InputText class="form-control"
+                        type="password"
+                        @bind-Value="Model.Password"
+                        placeholder="Password" />
+            <ValidationMessage For="@(() => Model.Password)" class="text-danger small" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Confirm password</label>
+            <InputText class="form-control"
+                        type="password"
+                        @bind-Value="Model.ConfirmPassword"
+                        placeholder="Confirm password" />
+            <ValidationMessage For="@(() => Model.ConfirmPassword)" class="text-danger small" />
+        </div>
+
+        @if (ErrorMessage is not null)
+        {
+            <div class="alert alert-danger py-2">
+                @ErrorMessage
+            </div>
+        }
+
+        <button type="submit"
+                class="btn btn-primary w-100"
+                disabled="@IsSubmitting">
+            @(IsSubmitting ? "Registering..." : "Register")
+        </button>
+
+        <div class="text-center mt-3">
+            <NavLink href="/login">
+                I already have an account
+            </NavLink>
+        </div>
+
+    </EditForm>
+
+</div>
+
 
 @code {
-    private RegisterModel Model = new RegisterModel();
+    private readonly RegisterModel Model = new RegisterModel();
     private bool IsSubmitting = false;
+    private string? ErrorMessage;
 
-    private async Task RegisterHandling()
+    private async Task HandleRegister()
     {
         IsSubmitting = true;
 
-        //pocess
-        await Task.Delay(3000);
+        try
+        {
+            var request = new RegisterRequest
+            {
+                UserName = Model.Email,
+                Email = Model.Email,
+                Password = Model.Password
+            };
 
+            await AuthService.RegisterAsync(request);
 
-        IsSubmitting = false;
+            Nav.NavigateTo("/login");
+        }
+        catch (AppException ex)
+        {
+            ErrorMessage = ex?.Error?.Message ?? "Something went wrong";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
     }
 }

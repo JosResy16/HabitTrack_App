@@ -16,7 +16,7 @@ namespace HabitTracker.Application.DTOs
         public Priority? Priority { get; set; }
 
         [Range(1, 365, ErrorMessage = "RepeatCount must be between 1 and 365")]
-        public int RepeatCount { get; set; }
+        public int RepeatCount { get; set; } = 1;
 
         [Range(1, 30, ErrorMessage = "RepeatInterval must be between 1 and 30")]
         public int RepeatInterval { get; set; }

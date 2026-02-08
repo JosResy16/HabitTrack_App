@@ -1,5 +1,4 @@
-﻿using HabitTracker.Application.Services;
-using HabitTracker.Domain;
+﻿using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 
 
@@ -17,6 +16,7 @@ namespace HabitTracker.Application.Common.Interfaces
         Task<IEnumerable<HabitLog>> GetPendingLogsAsync(Guid userId, DateOnly? date = null);
         Task<HabitLog?> GetLogForHabitAndDayAsync(Guid habitId, DateOnly date);
         Task<IEnumerable<HabitLog>> GetLogsByActionTypeAsync(Guid userId, ActionType actionType, DateOnly date);
+        Task<HabitLog?> GetLastLogForDateAsync(Guid userId, Guid habitId, DateOnly date);
 
     }
 }

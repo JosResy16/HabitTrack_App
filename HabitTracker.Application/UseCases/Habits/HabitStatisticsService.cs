@@ -1,7 +1,9 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
+using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -10,12 +12,14 @@ namespace HabitTracker.Application.UseCases.Habits
         private readonly IHabitLogRepository _habitLogRepository;
         private readonly IUserContextService _userContextService;
         private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly IHabitRepository _habitRepository;
 
-        public HabitStatisticsService(IHabitLogRepository habitLogRepository, IUserContextService userContextService, IDateTimeProvider dateTimeProvider)
+        public HabitStatisticsService(IHabitLogRepository habitLogRepository, IUserContextService userContextService, IDateTimeProvider dateTimeProvider, IHabitRepository habitRepository)
         {
             _habitLogRepository = habitLogRepository;
             _userContextService = userContextService;
             _dateTimeProvider = dateTimeProvider;
+            _habitRepository = habitRepository;
         }
 
         public async Task<Result<double>> GetCompletionRateAsync(DateOnly start, DateOnly end)
@@ -69,7 +73,93 @@ namespace HabitTracker.Application.UseCases.Habits
             return Result<int>.Success(CalculateLongestStreak(completedLogs));
         }
 
-        private double CalculateCompletionRate(IEnumerable<HabitLog> logs)
+        public async Task<Result<HabitStatsSummaryDTO>> GetSummaryAsync()
+        {
+            var userId = _userContextService.GetCurrentUserId();
+
+            var logs = await _habitLogRepository.GetLogsByUserIdAsync(userId.Value);
+
+            if (!logs.Any())
+            {
+                return Result<HabitStatsSummaryDTO>.Success(new HabitStatsSummaryDTO());
+            }
+
+            var completedLogs = logs
+                .Where(l => l.ActionType == ActionType.Completed)
+                .OrderBy(l => l.Date)
+                .ThenBy(l => l.CreatedAt)
+                .ToList();
+
+            var end = DateOnly.FromDateTime(_dateTimeProvider.UtcNow);
+            var start = end.AddDays(-6);
+
+            var weeklyRate = CalculateCompletionRate(logs.Where(l => l.Date >= start && l.Date <= end));
+
+            return Result<HabitStatsSummaryDTO>.Success(new HabitStatsSummaryDTO
+            {
+                WeeklyAverage = weeklyRate,
+                LongestStreak = CalculateLongestStreak(completedLogs),
+                TotalCompletions = completedLogs.Count
+            });
+        }
+
+        public async Task<Result<TodaySummaryDTO>> GetTodaySummaryAsync()
+        {
+            var userId = _userContextService.GetCurrentUserId();
+            var today = _dateTimeProvider.UtcNow;
+
+            var habits = await _habitRepository.GetHabitsAsync(userId.Value);
+            var todayHabits = habits.Where(h  => HabitAppliesToDate(h, DateOnly.FromDateTime(today))).ToList();
+
+            var todayLogs = await _habitLogRepository.GetLogsByDateAsync(userId.Value, DateOnly.FromDateTime(today));
+
+            var completedToday = todayLogs
+                .GroupBy(l => l.HabitId)
+                .Select(g => g.OrderByDescending(l => l.CreatedAt).First())
+                .Count(l => l.ActionType == ActionType.Completed);
+
+            var firstCompletion = todayLogs
+                .Where(l => l.ActionType == ActionType.Completed)
+                .OrderBy(l => l.CreatedAt)
+                .FirstOrDefault();
+
+            var streak = await CalculateCurrentStreakAsync(userId.Value);
+
+            return Result<TodaySummaryDTO>.Success(new TodaySummaryDTO
+            {
+                TotalHabitsToday = todayHabits.Count,
+                CompletedHabitsToday = completedToday,
+                CurrentStreak = streak,
+                FirstCompletionAt = firstCompletion?.CreatedAt
+            });
+        }
+
+        private static bool HabitAppliesToDate(HabitEntity habit, DateOnly date)
+        {
+            var createdDate = DateOnly.FromDateTime(habit.CreatedAt);
+
+            if (date < createdDate)
+                return false;
+
+            if (habit.RepeatPeriod == null || habit.RepeatInterval == null)
+                return true;
+
+            var daysDifference = date.DayNumber - createdDate.DayNumber;
+
+            return habit.RepeatPeriod switch
+            {
+                Period.Daily =>
+                    daysDifference % habit.RepeatInterval.Value == 0,
+
+                Period.Weekly =>
+                    (daysDifference / 7) % habit.RepeatInterval.Value == 0
+                    && date.DayOfWeek == createdDate.DayOfWeek,
+
+                _ => false
+            };
+        }
+
+        private static double CalculateCompletionRate(IEnumerable<HabitLog> logs)
         {
             var lastLogPerDay = logs
                 .GroupBy(l => l.Date)
@@ -113,7 +203,31 @@ namespace HabitTracker.Application.UseCases.Habits
 
             return streak;
         }
-        private int CalculateLongestStreak(IEnumerable<HabitLog> completedLogsAsc)
+
+        private async Task<int> CalculateCurrentStreakAsync(Guid userId)
+        {
+            var today = DateOnly.FromDateTime(_dateTimeProvider.UtcNow);
+            var streak = 0;
+
+            for (var day = today; ; day = day.AddDays(-1))
+            {
+                var logs = await _habitLogRepository.GetLogsByDateAsync(userId, day);
+
+                var hasCompletion = logs
+                    .GroupBy(l => l.HabitId)
+                    .Select(g => g.OrderByDescending(l => l.CreatedAt).First())
+                    .Any(l => l.ActionType == ActionType.Completed);
+
+                if (!hasCompletion)
+                    break;
+
+                streak++;
+            }
+
+            return streak;
+        }
+
+        private static int CalculateLongestStreak(IEnumerable<HabitLog> completedLogsAsc)
         {
             int current = 0;
             int longest = 0;

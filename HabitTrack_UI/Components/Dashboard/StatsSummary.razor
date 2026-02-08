@@ -1,4 +1,5 @@
-﻿<div class="container">
+﻿@using HabitTracker.Application.DTOs
+<div class="container">
     <div>
         @if (Total == 0)
         {
@@ -8,17 +9,17 @@
     <div>
         <TodayProgress Completed="Completed"
                        Total="Total" />
-
-        <StatCard Title="Weekly Average"
-                  Value="@($"{WeeklyAverage}%")"
+        
+        <StatCard Title="Current Streak"
+                  Value="@($"{Completed}%")"
                   Subtitle="Last 7 days" />
 
         <StatCard Title="Longest Streak"
-                  Value="@($"{LongestStreak}")"
+                  Value="@($"{StatsSummaryDTO?.LongestStreak}")"
                   Subtitle="days" />
 
         <StatCard Title="Total Completions"
-                  Value="@($"{TotalCompletions}")"
+                  Value="@($"{StatsSummaryDTO?.TotalCompletions}")"
                   Subtitle="All time" />
     </div>
 </div>
@@ -26,8 +27,6 @@
 @code {
     [Parameter] public int Completed { get; set; }
     [Parameter] public int Total { get; set; }
+    [Parameter] public HabitStatsSummaryDTO? StatsSummaryDTO { get; set; }
 
-    private int WeeklyAverage = 0;
-    private int LongestStreak = 0;
-    private int TotalCompletions = 0;
 }

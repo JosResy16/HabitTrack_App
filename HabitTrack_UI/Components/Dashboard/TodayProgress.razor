@@ -1,21 +1,45 @@
-﻿<div class="stat-card">
-    <p class="stat-title">Today's Progress</p>
+﻿<div class="card shadow-sm">
+    <div class="card-body">
 
-    <div class="stat-content">
-        <div>
-            <p class="stat-value">@Completed / @Total</p>
-            <p class="stat-subtitle">@($"{Percentage}% completed")</p>
+        <p class="text-muted mb-1 fw-semibold">
+            Today's Progress
+        </p>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">
+                    @Completed / @Total
+                </h4>
+
+                <small class="text-muted">
+                    @RemainingHabits habits left today
+                </small>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Icon))
+            {
+                <span class="fs-3">
+                    @Icon
+                </span>
+            }
         </div>
 
-        <div>
-            <span>Icon here</span>
+        <div class="progress mt-3" style="height: 6px;">
+            <div class="progress-bar"
+                 role="progressbar"
+                 style="width: @Percentage%">
+            </div>
         </div>
+
     </div>
 </div>
 
 @code {
     [Parameter] public int Completed { get; set; }
     [Parameter] public int Total { get; set; }
+    [Parameter] public string? Icon { get; set; }
+
+    private int RemainingHabits => Total - Completed;
 
     private int Percentage =>
         Total == 0 ? 0 : (int)((double)Completed / Total * 100);

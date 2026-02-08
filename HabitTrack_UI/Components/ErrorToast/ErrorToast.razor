@@ -1,5 +1,6 @@
 ﻿@using HabitTrack_UI.Models.ErrorModels
 @using HabitTrack_UI.Services
+@implements IDisposable
 
 @inject ErrorService ErrorService
 
@@ -13,18 +14,21 @@
 @code {
     private bool _visible;
     private string? _message;
+    private bool _disposed;
 
     protected override void OnInitialized()
     {
         ErrorService.OnError += HandleError;
     }
 
-    private void HandleError(AppError error)
+    private async void HandleError(AppError error)
     {
+        if (_disposed) return;
+
         _message = error.Message;
         _visible = true;
 
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
 
         _ = HideLater();
     }
@@ -32,12 +36,16 @@
     private async Task HideLater()
     {
         await Task.Delay(4000);
+
+        if (_disposed) return;
+
         _visible = false;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
+        _disposed = true;
         ErrorService.OnError -= HandleError;
     }
 }

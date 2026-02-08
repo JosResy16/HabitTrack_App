@@ -1,17 +1,18 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
 
-    <main>
-        <article class="content px-4">
+<div class="d-flex flex-column min-vh-100">
+
+    <NavMenu />
+
+    <main class="flex-grow-1">
+        <div class="container py-4">
             <ErrorToast />
             @Body
-        </article>
+        </div>
     </main>
 
-    <footer>
+    <footer class="border-top text-center py-3 text-muted">
         <small>© 2025 HabitTrack</small>
     </footer>
+
 </div>

@@ -1,27 +1,166 @@
-﻿<div class="container">
-    <div>
-        <button>Add new habit</button>
-    </div>
-    <div>
-        <p>Add New Habit</p>
-        <span>X</span> @*Icon to close/minimize this section*@
-        <EditForm>
-            <div>
-                <label>Habit name*</label>
-                <InputText placeholder="e.g., do house chores"></InputText>
-            </div>
-            <div>
-                <label>Description (optional)</label>
-                <InputTextArea palceholder="Add any notes or details about this habit..."></InputTextArea>
-            </div>
-            <div>
-                <button>Add habit</button>
-                <button>Cancel</button>
-            </div>
-        </EditForm>
+﻿@using HabitTrack_UI.Models
+@using HabitTrack_UI.Services.AppErrorService
+@using HabitTrack_UI.Services.Habits
+@using HabitTracker.Application.DTOs
+@using HabitTracker.Domain
+
+@inject CategoryService CategoryService
+@inject HabitsService HabitsService
+@inject NavigationManager Nav
+
+
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Add New Habit</h5>
+
+            <EditForm Model="Model" OnValidSubmit="HandligAddHabit">
+                <DataAnnotationsValidator />
+
+                <!-- Title -->
+                <div class="mb-3">
+                    <label class="form-label">Habit name*</label>
+                    <InputText class="form-control" @bind-Value="Model.Title" placeholder="e.g., do house chores"></InputText>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label class="form-label">Description (optional)</label>
+                    <InputTextArea class="form-control" rows="3" @bind-Value="Model.Description" placeholder="Add any notes or details about this habit..."></InputTextArea>
+                </div>
+
+                <!-- Categories -->
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+
+                    @if (IsLoading)
+                    {
+                        <div class="form-text">Loading categories...</div>
+                    }
+                    else if (!string.IsNullOrEmpty(categoriesError))
+                    {
+                        <div class="text-danger">@categoriesError</div>
+                    }
+                    else
+                    {
+                        <InputSelect class="form-select" @bind-Value="Model.CategoryId">
+                            <option value="">No category</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category.Id">@category.Title</option>
+                            }
+                        </InputSelect>
+                    }
+                </div>
+
+                <!-- Priority -->
+                <div class="mb-3">
+                    <label class="form-label">Priority</label>
+                    <InputSelect class="form-select" @bind-Value="Model.Priority">
+                        @foreach (var priority in Enum.GetValues<Priority>())
+                        {
+                            <option value="@priority">@priority</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <!-- Repeat period -->
+                <div class="mb-3">
+                    <label class="form-label">Repeat</label>
+                    <InputSelect class="form-select" @bind-Value="Model.RepeatPeriod">
+                        <option value="">Select period</option>
+                        @foreach (var period in Enum.GetValues<Period>())
+                        {
+                            <option value="@period">@period</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <!-- Error -->
+                <div>
+                    @if (ErrorMessage is not null)
+                    {
+                        <div class="alert alert-danger py-2">
+                            @ErrorMessage
+                        </div>
+                    }
+                </div>
+
+                <!-- Submit -->
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-primary" type="submit" disabled="@IsSubmitting">
+                        @(IsSubmitting ? "Adding..." : "Add")
+                    </button>
+                </div>
+
+            </EditForm>
+        </div>
     </div>
 </div>
 
 @code {
+    private readonly AddHabitModel Model = new AddHabitModel();
+    private List<CategoryModel> categories = new List<CategoryModel>();
+    [Parameter] public EventCallback OnHabitCreated { get; set; }
 
+    private bool IsSubmitting = false;
+    private bool IsLoading = true;
+    private string? categoriesError;
+    private string? ErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = await CategoryService.GetCategories();
+        }
+        catch
+        {
+            categoriesError = "Failed to load categories";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task HandligAddHabit()
+    {
+        try
+        {
+            IsSubmitting = true;
+
+            var habit = new CreateHabitDTO
+            {
+                Title = Model.Title,
+                Description = Model.Description,
+                CategoryId = Model.CategoryId,
+                Priority = Model.Priority,
+                RepeatInterval = Model.RepeatInterval,
+                RepeatPeriod = Model.RepeatPeriod,
+            };
+
+            var response = await HabitsService.Create(habit);
+            await OnHabitCreated.InvokeAsync();
+
+            ResetForm();
+        }
+        catch (AppException ex)
+        {
+            ErrorMessage = ex?.Error?.Message ?? "Something went wrong";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        Model.Title = string.Empty;
+        Model.Description = string.Empty;
+        Model.CategoryId = null;
+        Model.Priority = null;
+        Model.RepeatInterval = 1;
+    }
 }

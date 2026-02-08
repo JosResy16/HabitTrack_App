@@ -106,6 +106,7 @@ builder.Services.AddScoped<IHabitsService, HabitServices>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IHabitQueryService, HabitQueryService>();
 builder.Services.AddScoped<IHabitLogService, HabitLogService>();
+builder.Services.AddScoped<IHabitStatisticsService, HabitStatisticsService>();
 
 var app = builder.Build();
 

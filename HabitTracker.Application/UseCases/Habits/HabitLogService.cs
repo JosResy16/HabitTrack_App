@@ -77,5 +77,13 @@ namespace HabitTracker.Application.UseCases.Habits
 
             return Result<IEnumerable<HabitLog>>.Success(logs);
         }
+
+        public async Task<Result<HabitLog?>> GetLastLogForDateAsync(Guid userId, Guid habitId, DateOnly date)
+        {
+            var id = _userContextService.GetCurrentUserId();
+            var log = await _habitLogRepository.GetLastLogForDateAsync(id.Value, habitId, date);
+
+            return Result<HabitLog?>.Success(log);
+        }
     }
 }

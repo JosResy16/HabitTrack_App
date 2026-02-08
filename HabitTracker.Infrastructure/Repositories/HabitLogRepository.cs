@@ -123,5 +123,17 @@ namespace HabitTracker.Infrastructure.Repositories
             )
             .ToListAsync();
         }
+
+        public async Task<HabitLog?> GetLastLogForDateAsync(Guid userId, Guid habitId, DateOnly date)
+        {
+            return await _dbContext.Logs
+                .Include(l => l.Habit)
+                .Where(l =>
+                    l.Habit.UserId == userId &&
+                    l.HabitId == habitId &&
+                    l.Date == date)
+                .OrderByDescending(l => l.CreatedAt)
+                .FirstOrDefaultAsync();
+        }
     }
 }

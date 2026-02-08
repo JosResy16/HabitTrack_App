@@ -21,7 +21,9 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
 
-        var claims = JwtUtils.Parse(token!);
+        var claims = JwtUtils.Parse(token);
+        if (claims == null || !claims.Any())
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
 
         var identity = new ClaimsIdentity(claims, "jwt");
         var user = new ClaimsPrincipal(identity);

@@ -1,4 +1,5 @@
-﻿using HabitTracker.Application.Services;
+﻿using HabitTracker.Application.DTOs;
+using HabitTracker.Application.Services;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -8,5 +9,8 @@ namespace HabitTracker.Application.UseCases.Habits
         Task<Result<double>> GetCompletionRateForHabitAsync(Guid habitId, DateOnly start, DateOnly end);
         Task<Result<int>> GetCurrentStreakAsync(Guid habitId);
         Task<Result<int>> GetLongestStreakAsync(Guid habitId);
+
+        Task<Result<HabitStatsSummaryDTO>> GetSummaryAsync();
+        Task<Result<TodaySummaryDTO>> GetTodaySummaryAsync();
     }
 }

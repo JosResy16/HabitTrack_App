@@ -11,6 +11,7 @@ namespace HabitTracker.Application.UseCases.Habits
         private readonly IHabitRepository _habitRepository;
         private readonly IUserContextService _userContextService;
         private readonly IHabitLogService _habitLogService;
+        
 
         public HabitServices(IHabitRepository habitRepository, IUserContextService userContextService, IHabitLogService habitLogService)
         {
@@ -63,18 +64,23 @@ namespace HabitTracker.Application.UseCases.Habits
         public async Task<Result> MarkHabitAsDone(Guid habitId)
         {
             var userId = _userContextService.GetCurrentUserId();
-            var habit = await _habitRepository.GetByIdAsync(habitId);
 
+            var habit = await _habitRepository.GetByIdAsync(habitId);
             if (habit == null)
                 return Result.Failure("Habit not found");
 
             if (habit.UserId != userId.Value)
                 return Result.Failure("Not authorized");
 
-            habit.MarkHabitAsDone();
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var lastLog = await _habitLogService
+                .GetLastLogForDateAsync(userId.Value, habitId, today);
+
+            if (lastLog?.Value?.ActionType == ActionType.Completed)
+                return Result.Success();
 
             await _habitLogService.AddLogAsync(habitId, ActionType.Completed);
-
             await _habitRepository.SaveChangesAsync();
 
             return Result.Success();
@@ -106,21 +112,15 @@ namespace HabitTracker.Application.UseCases.Habits
         public async Task<Result> UndoHabitCompletion(Guid habitId)
         {
             var userId = _userContextService.GetCurrentUserId();
-            var habit = await _habitRepository.GetByIdAsync(habitId);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            if (habit == null)
-                return Result.Failure("Habit not found");
+            var lastLogToday = await _habitLogService
+                .GetLastLogForDateAsync(userId.Value, habitId, today);
 
-            if (habit.UserId != userId.Value)
-                return Result.Failure("Not authorized");
-
-            if (!habit.IsCompleted)
+            if (lastLogToday == null || lastLogToday.Value?.ActionType != ActionType.Completed)
                 return Result.Failure("Habit is not marked as completed");
 
-            habit.UndoCompletion();
-
             await _habitLogService.AddLogAsync(habitId, ActionType.Undone);
-
             await _habitRepository.SaveChangesAsync();
 
             return Result.Success();

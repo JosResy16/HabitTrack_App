@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HabitTracker.Application\HabitTracker.Application.csproj" />
-    <ProjectReference Include="..\HabitTracker.Shared\HabitTracker.Shared.csproj" />
   </ItemGroup>
 
 </Project>

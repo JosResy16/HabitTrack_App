@@ -24,8 +24,6 @@ namespace HabitTracker.Domain.Entities
             Description = description;
             RepeatPeriod = repeatPeriod;
             RepeatInterval = repeatInterval;
-
-            IsCompleted = false;
             IsDeleted = false;
         }
 
@@ -38,7 +36,6 @@ namespace HabitTracker.Domain.Entities
 
         public Guid UserId { get; set; }
         public UserEntity? User { get; set; }
-        public bool IsCompleted { get; private set; } = false;
         public Guid? CategoryId { get; set; }
         public CategoryEntity? Category { get; set; }
         public Priority? Priority { get; set; }
@@ -72,22 +69,6 @@ namespace HabitTracker.Domain.Entities
             Title = title;
             Description = description;
             Priority = priority;
-        }
-
-        public void MarkHabitAsDone()
-        {
-            if (IsCompleted) return;
-
-            IsCompleted = true;
-            LastTimeDoneAt = DateTime.UtcNow;
-        }
-
-        public void UndoCompletion()
-        {
-            if (!IsCompleted) return;
-
-            IsCompleted = false;
-            LastTimeDoneAt = null;  
         }
     }
 }

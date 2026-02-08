@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application.Tests", "Aplica
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HabitTrack_UI", "HabitTrack_UI\HabitTrack_UI.csproj", "{E2071DDA-C80D-4F21-8EA6-4516583E4B88}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HabitTracker.Shared", "HabitTracker.Shared\HabitTracker.Shared.csproj", "{EA644DF2-ABEB-42F4-967F-B836B0D66716}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,10 +47,6 @@ Global
 		{E2071DDA-C80D-4F21-8EA6-4516583E4B88}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2071DDA-C80D-4F21-8EA6-4516583E4B88}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2071DDA-C80D-4F21-8EA6-4516583E4B88}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EA644DF2-ABEB-42F4-967F-B836B0D66716}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EA644DF2-ABEB-42F4-967F-B836B0D66716}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EA644DF2-ABEB-42F4-967F-B836B0D66716}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EA644DF2-ABEB-42F4-967F-B836B0D66716}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -63,7 +57,6 @@ Global
 		{B7AB49A0-BE45-4612-9DFE-EA648FB05E88} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{23FAE8DD-3DD1-471C-A241-8C9993D4DE00} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{E2071DDA-C80D-4F21-8EA6-4516583E4B88} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{EA644DF2-ABEB-42F4-967F-B836B0D66716} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D87D045C-9E10-40FF-A5C9-E849AC03791E}

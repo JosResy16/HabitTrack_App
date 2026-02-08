@@ -1,0 +1,14 @@
+﻿using HabitTracker.Domain;
+
+namespace HabitTracker.Shared.DTOs;
+public class HabitTodayDTO
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public Guid? CategoryId { get; set; }
+    public Priority? Priority { get; set; }
+    public bool IsCompletedToday { get; set; }
+    public DateOnly? LastTimeDoneAt { get; set; }
+}
+

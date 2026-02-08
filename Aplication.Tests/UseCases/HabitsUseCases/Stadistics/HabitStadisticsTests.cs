@@ -4,7 +4,7 @@ using HabitTracker.Application.UseCases.Habits;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 using Moq;
-using System.Security.Cryptography;
+
 
 namespace Application.Tests.UseCases.HabitsUseCases.Stadistics;
 
@@ -13,6 +13,7 @@ internal class HabitStadisticsTests
     private Mock<IHabitLogRepository> _habitLogRepositoryMock;
     private Mock<IUserContextService> _userContextServiceMock;
     private Mock<IDateTimeProvider> _dateTimeProviderMock;
+    private Mock<IHabitRepository> _habitRepositoryMock;
     private IHabitStatisticsService _habitStadisticsService;
 
     [SetUp]
@@ -21,11 +22,14 @@ internal class HabitStadisticsTests
         _habitLogRepositoryMock = new Mock<IHabitLogRepository>();
         _userContextServiceMock = new Mock<IUserContextService>();
         _dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        _habitRepositoryMock = new Mock<IHabitRepository>();
+
 
         _habitStadisticsService = new HabitStatisticsService(
             _habitLogRepositoryMock.Object,
             _userContextServiceMock.Object,
-            _dateTimeProviderMock.Object
+            _dateTimeProviderMock.Object,
+            _habitRepositoryMock.Object
         );
     }
 

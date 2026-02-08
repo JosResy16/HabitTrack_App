@@ -1,16 +1,33 @@
 ﻿
-
-<InputCheckbox @bind-Value="Habit.IsCompletedToday"
+<div class="list-group-item d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+        <input type="checkbox" checked="@Habit.IsCompletedToday"
                @onchange="OnChanged" />
 
-<span>@Habit.Title</span>
+        <span class="@TitleClass">@Habit.Title</span>
+    </div>
+
+    <button class="btn btn-sm btn-outline-danger"
+            @onclick="OnDelete">
+        Delete
+    </button>
+</div>
 
 @code {
     [Parameter] public HabitTodayDTO Habit { get; set; } = default!;
     [Parameter] public EventCallback<HabitTodayDTO> OnToggleCompleted { get; set; }
+    [Parameter] public EventCallback<Guid> OnDeleteHabit { get; set; }
 
-    private async Task OnChanged(ChangeEventArgs _)
+    private string TitleClass =>
+        Habit.IsCompletedToday ? "text-decoration-line-through text-muted" : "";
+
+    private async Task OnChanged(ChangeEventArgs e)
     {
         await OnToggleCompleted.InvokeAsync(Habit);
+    }
+
+    private async Task OnDelete()
+    {
+        await OnDeleteHabit.InvokeAsync(Habit.Id);
     }
 }

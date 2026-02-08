@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Application.DTOs;
 using HabitTracker.Domain;
+using HabitTracker.Shared.DTOs;
 
 namespace HabitTrack_UI.Services.Api;
 public class HabitApiClient
@@ -26,14 +27,14 @@ public class HabitApiClient
         return await _api.GetAsync<HabitResponseDTO>($"api/habits/{id}");
     }
 
-    public async Task<List<HabitResponseDTO>> GetTodayHabits(DateOnly? day)
+    public async Task<List<HabitTodayDTO>> GetTodayHabits(DateOnly? day)
     {
         var url = "api/habits/today";
 
         if (day.HasValue)
             url += $"?day={day:yyyy-MM-dd}";
 
-        return await _api.GetAsync<List<HabitResponseDTO>>(url) ?? [];
+        return await _api.GetAsync<List<HabitTodayDTO>>(url) ?? [];
     }
 
     public async Task<List<HabitHistoryDTO>> GetHabitHistory(Guid id)

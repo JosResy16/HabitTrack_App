@@ -2,39 +2,132 @@
 @attribute [Authorize]
 
 @using HabitTrack_UI.Components.Dashboard;
+@using HabitTrack_UI.Services.AppErrorService
+@using HabitTracker.Application.DTOs
 @using Microsoft.AspNetCore.Authorization
+@using HabitTrack_UI.Services.Habits
+
+@inject HabitsService HabitsService
+@inject HabitStatsService StatsService
 
 <PageTitle>Home</PageTitle>
 
-<h1>Habit tracker</h1>
-<p>Build better habits, one day at a time</p>
+<div class="container py-4">
 
-<section>
-    <StatsSummary Completed="CompletedHabits" Total="TotalHabits"/>
-</section>
+    <header class="mb-4">
+        <h1 class="fw-bold mb-1">Habit Tracker</h1>
+        <p class="text-muted">
+            Build better habits, one day at a time
+        </p>
+    </header>
 
-<section>
-    <AddHabit/>
-</section>
+    @if (IsLoading)
+    {
+        <div class="text-center py-5">
+            <p class="text-muted">Loading your habits...</p>
+        </div>
+    }
+    else if (LoadError is not null)
+    {
+        <div class="alert alert-danger">
+            @LoadError
+        </div>
+    }
+    else
+    {
+        <section class="mb-4">
+            <TodaySummary Summary="TodaySummary" />
+        </section>
 
-<section>
-    <TodayHabitList Habits="Habits" OnToggleHabit="ToggleHabit"/>
-</section>
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <AddHabit OnHabitCreated="LoadTodayHabits" />
+            </div>
+
+            <div class="col-12 col-md-8">
+                <TodayHabitList Habits="TodayHabits"
+                                OnToggleHabit="ToggleHabitAsync"
+                                Title="Your Habits" />
+            </div>
+        </div>
+    }
+
+</div>
 
 
 @code{
-    private List<HabitTodayDTO> Habits = new()
-    {
-        new() { Id = Guid.NewGuid(), Title = "Drink water", IsCompletedToday = false },
-        new() { Id = Guid.NewGuid(), Title = "Read 10 minutes", IsCompletedToday = true }
-    };
+    private List<HabitTodayDTO> TodayHabits = new();
+    private TodaySummaryDTO? TodaySummary;
 
-    private int TotalHabits => Habits.Count;
-    private int CompletedHabits => Habits.Count(h => h.IsCompletedToday);
+    private int TotalHabits => TodayHabits.Count;
+    private int CompletedHabits => TodayHabits.Count(h => h.IsCompletedToday);
+    private bool IsLoading;
+    private string? LoadError;
 
-    private void ToggleHabit(HabitTodayDTO habit)
+    private DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    protected override async Task OnInitializedAsync()
     {
-        habit.IsCompletedToday = !habit.IsCompletedToday;
+        await LoadTodayHabits();
+    }
+
+    private async Task LoadTodayHabits()
+    {
+        IsLoading = true;
+        LoadError = null;
+
+        try
+        {
+            TodayHabits = await HabitsService.GetTodayHabits(today);
+        }
+        catch
+        {
+            LoadError = "Couldn't load habits";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+
+        try
+        {
+            TodaySummary = await StatsService.GetTodaySummary();
+        }
+        catch
+        {
+            TodaySummary = null;
+        }
+
+    }
+
+    private async Task ToggleHabitAsync(HabitTodayDTO habit)
+    {
+        var previousValue = habit.IsCompletedToday;
+
+        Console.WriteLine("Toggle Habit Clicked:...");
+        try
+        {
+            if (!habit.IsCompletedToday)
+            {
+                await HabitsService.MarkCompleted(habit.Id);
+                habit.IsCompletedToday = true;
+                habit.LastTimeDoneAt = DateOnly.FromDateTime(DateTime.UtcNow);
+            }
+            else
+            {
+                await HabitsService.UndoHabitCompletion(habit.Id);
+                habit.IsCompletedToday = false;
+                habit.LastTimeDoneAt = null;
+            }
+
+            TodaySummary = await StatsService.GetTodaySummary();
+        }
+        catch
+        {
+            //TODO: show Toast error
+            habit.IsCompletedToday = previousValue;
+        }
+
     }
 }
 
