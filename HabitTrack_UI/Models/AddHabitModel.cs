@@ -18,6 +18,6 @@ public class AddHabitModel
     public int RepeatInterval { get; set; } = 1;
 
     [Required]
-    public Period RepeatPeriod { get; set; } = Period.Daily;
+    public Period? RepeatPeriod { get; set; } = Period.Daily;
 }
 

@@ -39,4 +39,16 @@ public class HabitStatisticsController : ControllerBase
 
         return BadRequest(result.ErrorMessage);
     }
+
+    [HttpGet("{habitId}")]
+    public async Task<IActionResult> GetHabitStatsAsync(Guid habitId)
+    {
+        var result = await _statisticsService.GetHabtitStatsAsync(habitId);
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return BadRequest(result.ErrorMessage);
+    }
 }

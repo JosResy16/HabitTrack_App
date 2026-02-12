@@ -37,4 +37,14 @@ public class HabitsService
     {
         await _api.UndoHabitCompletion(id);
     }
+
+    public async Task<HabitResponseDTO?> GetHabitById(Guid id)
+    {
+        return await _api.GetHabitById(id);
+    }
+
+    public async Task Update(Guid id, UpdateHabitDTO habit)
+    {
+        await _api.Update(id, habit);
+    }
 }

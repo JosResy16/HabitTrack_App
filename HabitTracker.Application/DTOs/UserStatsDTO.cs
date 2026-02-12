@@ -1,7 +1,7 @@
 ﻿
 
 namespace HabitTracker.Application.DTOs;
-public class HabitStatsSummaryDTO
+public class UserStatsDTO
 {
     public double WeeklyAverage { get; set; }
     public int LongestStreak { get; set; }

@@ -126,7 +126,7 @@ namespace HabitTracker.Application.UseCases.Habits
             return Result.Success();
         }
 
-        public async Task<Result<HabitResponseDTO?>> UpdateHabitAsync(Guid habitId, CreateHabitDTO habitDto)
+        public async Task<Result<HabitResponseDTO?>> UpdateHabitAsync(Guid habitId, UpdateHabitDTO habitDto)
         {
             var userId = _userContextService.GetCurrentUserId();
 

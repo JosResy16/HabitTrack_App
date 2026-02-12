@@ -186,7 +186,8 @@ namespace HabitTracker.Application.UseCases.Habits
                 RepeatInterval = habit.RepeatInterval,
                 RepeatPeriod = habit.RepeatPeriod,
                 Duration = habit.Duration,
-                LastTimeDoneAt = habit.LastTimeDoneAt
+                LastTimeDoneAt = habit.LastTimeDoneAt,
+                CreatedAt = habit.CreatedAt,
             };
         }
 

@@ -11,7 +11,7 @@ public class HabitStatsService
         _api = api;
     }
 
-    public async Task<HabitStatsSummaryDTO?> GetStatsSummary()
+    public async Task<HabitStatsDTO?> GetStatsSummary()
     {
         return await _api.GetStatsSummary();
     }
@@ -19,6 +19,11 @@ public class HabitStatsService
     public async Task<TodaySummaryDTO> GetTodaySummary()
     {
         return await _api.GetTodaySummary();
+    }
+
+    public async Task<HabitStatsDTO> GetHabtitStatsAsync(Guid habitId)
+    {
+        return await _api.GetHabitStatsAsync(habitId);
     }
 }
 

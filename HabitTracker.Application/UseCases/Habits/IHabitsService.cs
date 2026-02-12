@@ -2,8 +2,6 @@
 
 using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
-using HabitTracker.Domain;
-using HabitTracker.Domain.Entities;
 
 namespace HabitTracker.Application.UseCases.Habits
 {
@@ -11,7 +9,7 @@ namespace HabitTracker.Application.UseCases.Habits
     {
         Task<Result<HabitResponseDTO>> AddNewHabitAsync(CreateHabitDTO habit);
         Task<Result> RemoveHabitAsync(Guid habitId);        
-        Task<Result<HabitResponseDTO?>> UpdateHabitAsync(Guid habitId, CreateHabitDTO habitDto);
+        Task<Result<HabitResponseDTO?>> UpdateHabitAsync(Guid habitId, UpdateHabitDTO habitDto);
         Task<Result> MarkHabitAsDone(Guid habitId);
         Task<Result> UndoHabitCompletion(Guid habitId);
     }

@@ -1,4 +1,6 @@
 ﻿
+@inject NavigationManager Navigate 
+
 <div class="list-group-item d-flex align-items-center justify-content-between">
     <div class="d-flex align-items-center gap-3">
         <input type="checkbox" checked="@Habit.IsCompletedToday"
@@ -7,10 +9,16 @@
         <span class="@TitleClass">@Habit.Title</span>
     </div>
 
-    <button class="btn btn-sm btn-outline-danger"
-            @onclick="OnDelete">
-        Delete
-    </button>
+    <div class="d-flex justify-content-between gap-2">
+        <button class="btn btn-sm btn-outline-danger"
+                @onclick="OnDelete">
+            Delete
+        </button>
+        <button class="btn btn-sm btn-outline-info"
+                @onclick="GoToDetails">
+            View
+        </button>
+    </div>
 </div>
 
 @code {
@@ -29,5 +37,10 @@
     private async Task OnDelete()
     {
         await OnDeleteHabit.InvokeAsync(Habit.Id);
+    }
+
+    private void GoToDetails()
+    {
+        Navigate.NavigateTo($"/habits/{Habit.Id}");
     }
 }

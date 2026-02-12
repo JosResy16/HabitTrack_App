@@ -3,8 +3,6 @@ using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace HabitTracker.Application.UseCases.Habits
 {
     public class HabitStatisticsService : IHabitStatisticsService
@@ -73,7 +71,63 @@ namespace HabitTracker.Application.UseCases.Habits
             return Result<int>.Success(CalculateLongestStreak(completedLogs));
         }
 
-        public async Task<Result<HabitStatsSummaryDTO>> GetSummaryAsync()
+        public async Task<Result<HabitStatsDTO>> GetHabtitStatsAsync(Guid habitId)
+        {
+            var userId = _userContextService.GetCurrentUserId();
+            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId.Value, habitId);
+            var today = DateOnly.FromDateTime(_dateTimeProvider.UtcNow);
+
+            if (!logs.Any())
+                return Result<HabitStatsDTO>.Success(new HabitStatsDTO());
+
+            var completedLogs = logs
+                .Where(l => l.ActionType == ActionType.Completed)
+                .OrderBy(l => l.Date)
+                .ThenBy(l => l.CreatedAt)
+                .ToList();
+
+            var currentStreak = CalculateCurrentStreak(completedLogs);
+            var longestStreak = CalculateLongestStreak(completedLogs);
+
+            //CompletionRate
+            var end = DateOnly.FromDateTime(_dateTimeProvider.UtcNow);
+            var start = end.AddDays(-6);
+            var completionRate = CalculateCompletionRate(logs.Where(l => l.Date >= start && l.Date <= end));
+            
+
+            //TotalTrackedDays
+            var createdDate = logs.FirstOrDefault(l => l.ActionType == ActionType.Created)?.Date;
+            var totalTrackedDays = today.DayNumber - (createdDate.Value.DayNumber + 1);
+
+            //DaysSinceLastCompletion
+            var lastCompletion = logs
+                .Where(l => l.ActionType == ActionType.Completed)
+                .OrderByDescending(l => l.Date)
+                .FirstOrDefault();
+
+            int daysSinceLastCompletion;
+
+            if (lastCompletion == null)
+            {
+                daysSinceLastCompletion = -1;
+            }
+            else
+            {
+                daysSinceLastCompletion = today.DayNumber - lastCompletion.Date.DayNumber;
+            }
+
+            return Result<HabitStatsDTO>.Success(new HabitStatsDTO
+            {
+                TotalCompletion = completedLogs.Count,
+                CurrentStreak = currentStreak,
+                LongestStreak = longestStreak,
+                CompletionRate = completionRate,
+                TotalTrackedDays = totalTrackedDays,
+                DaysSinceLastCompletion = daysSinceLastCompletion,
+            });
+        }
+
+        public async Task<Result<UserStatsDTO>> GetSummaryAsync()
         {
             var userId = _userContextService.GetCurrentUserId();
 
@@ -81,7 +135,7 @@ namespace HabitTracker.Application.UseCases.Habits
 
             if (!logs.Any())
             {
-                return Result<HabitStatsSummaryDTO>.Success(new HabitStatsSummaryDTO());
+                return Result<UserStatsDTO>.Success(new UserStatsDTO());
             }
 
             var completedLogs = logs
@@ -95,7 +149,7 @@ namespace HabitTracker.Application.UseCases.Habits
 
             var weeklyRate = CalculateCompletionRate(logs.Where(l => l.Date >= start && l.Date <= end));
 
-            return Result<HabitStatsSummaryDTO>.Success(new HabitStatsSummaryDTO
+            return Result<UserStatsDTO>.Success(new UserStatsDTO
             {
                 WeeklyAverage = weeklyRate,
                 LongestStreak = CalculateLongestStreak(completedLogs),

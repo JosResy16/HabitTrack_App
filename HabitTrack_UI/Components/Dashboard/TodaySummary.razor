@@ -18,6 +18,12 @@
                   Subtitle="Today" />
     </div>
 </div>
+<div class="d-flex justify-content-end mt-2">
+    <NavLink href="/stats"
+             class="small fw-semibold text-primary text-decoration-none">
+        View detailed analytics →
+    </NavLink>
+</div>
 
 @code {
     [Parameter] public TodaySummaryDTO Summary { get; set; } = default!;

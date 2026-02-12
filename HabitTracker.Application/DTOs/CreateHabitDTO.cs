@@ -19,7 +19,7 @@ namespace HabitTracker.Application.DTOs
         public int RepeatCount { get; set; } = 1;
 
         [Range(1, 30, ErrorMessage = "RepeatInterval must be between 1 and 30")]
-        public int RepeatInterval { get; set; }
+        public int? RepeatInterval { get; set; }
         public Period? RepeatPeriod { get; set; }
         public TimeOnly? Duration { get; set; }
     }

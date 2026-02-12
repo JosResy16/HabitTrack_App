@@ -10,14 +10,19 @@ public class StatsApiClient
         _api = api;
     }
 
-    public async Task<HabitStatsSummaryDTO> GetStatsSummary()
+    public async Task<HabitStatsDTO> GetStatsSummary()
     {
-        return await _api.GetAsync<HabitStatsSummaryDTO>("api/habit-stats/summary");
+        return await _api.GetAsync<HabitStatsDTO>("api/habit-stats/summary");
     }
 
     public async Task<TodaySummaryDTO> GetTodaySummary()
     {
         return await _api.GetAsync<TodaySummaryDTO>("api/habit-stats/today-summary");
+    }
+
+    public async Task<HabitStatsDTO> GetHabitStatsAsync(Guid habtiId)
+    {
+        return await _api.GetAsync<HabitStatsDTO>($"api/habit-stats/{habtiId}");
     }
 }
 

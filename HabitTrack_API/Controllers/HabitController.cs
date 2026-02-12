@@ -70,7 +70,7 @@ namespace HabitTrack_API.Controllers
         }
 
         [HttpPut("{habitId}")]
-        public async Task<IActionResult> UpdateAsync(Guid habitId, [FromBody] CreateHabitDTO dto)
+        public async Task<IActionResult> UpdateAsync(Guid habitId, [FromBody] UpdateHabitDTO dto)
         {
             var result = await _habitService.UpdateHabitAsync(habitId, dto);
             return FromResult(result);

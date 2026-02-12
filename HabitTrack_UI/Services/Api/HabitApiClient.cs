@@ -47,7 +47,7 @@ public class HabitApiClient
     {
         return await _api.PostAsync<HabitResponseDTO>("api/habits", request);
     }
-    public async Task Update(Guid id, CreateHabitDTO request)
+    public async Task Update(Guid id, UpdateHabitDTO request)
     {
         await _api.PutAsync($"api/habits/{id}", request);
     }

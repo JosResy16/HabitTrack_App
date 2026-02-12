@@ -1,0 +1,263 @@
+﻿@page "/habits/{HabitId:guid}"
+
+@using HabitTrack_UI.Components.Dashboard
+@using HabitTrack_UI.Models
+@using HabitTrack_UI.Services.AppErrorService
+@using HabitTrack_UI.Services.Habits
+@using HabitTrack_UI.Components.Habits
+@using HabitTracker.Application.DTOs
+
+@inject HabitsService HabitService
+@inject HabitStatsService HabitStatsService
+
+<div class="container my-4">
+    <header class="mb-4">
+        <p class="text-muted mb-1">Habit Details</p>
+        <h2 class="fw-bold">
+            @Habit?.Title
+        </h2>
+    </header>
+
+    <EditHabitModal Model="UpdateModel"
+                    OnSaved="HandleSaved"
+                    OnClose="CloseEdit"
+                    IsSaving="IsSaving"
+                    ErrorMessage="ErrorMessage"
+                    IsVisible="IsEditing" />
+
+    <!-- Habit summary stats-->
+    <section>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+                <StatCard Title="Completed"
+                    Value="@($"{StatsModel?.TotalCompletion}")"
+                    Subtitle="Times"/>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <StatCard Title="Current Streak"
+                    Value="@($"{StatsModel?.CurrentStreak} days")"
+                    Subtitle="" />
+            </div>
+
+            <div class="col-6 col-md-3">
+                <StatCard Title="Completion rate"
+                    Value="@($"{StatsModel?.CompletitionRate}")"
+                    Subtitle="this week"/>
+            </div>
+        </div>
+    </section>
+
+    <!-- Habit details-->
+    <section>
+        <dl class="row mb-4">
+            <dt class="col-sm-4 text-muted">Description</dt>
+            <dd class="col-sm-8">@Habit?.Description</dd>
+
+            <dt class="col-sm-4 text-muted">Priority</dt>
+            <dd class="col-sm-8">@Habit?.Priority</dd>
+
+            <dt class="col-sm-4 text-muted">Repeat</dt>
+            <dd class="col-sm-8">
+                @Habit?.RepeatPeriod every @Habit?.RepeatCount
+            </dd>
+
+            <dt class="col-sm-4 text-muted">Created</dt>
+            <dd class="col-sm-8">
+                @Habit?.CreatedAt.ToShortDateString()
+            </dd>
+
+            <div class="d-flex justify-content-end p-2">
+                <button class="btn btn-sm btn-outline-secondary"
+                        @onclick="OpenEdit">
+                    Edit
+                </button>
+            </div>
+        </dl>
+    </section>
+
+    <!-- Habit stats-->
+    <section class="mt-4">
+        <div class="row g-4">
+
+            <!-- LEFT: Stats -->
+            <div class="col-12 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Longest Streak</span>
+                                <span class="fw-bold">@StatsModel?.LongestStreak days</span>
+                            </li>
+
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Tracked Days</span>
+                                <span class="fw-bold">@StatsModel?.TotalTrackedDays</span>
+                            </li>
+
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Days Since Last Completion</span>
+                                <span class="fw-bold">@StatsModel?.DaysSinceLastCompletion</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Graph / Calendar -->
+            <div class="col-12 col-lg-8">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">Activity</h6>
+
+                        <div class="d-flex justify-content-center align-items-center"
+                             style="min-height: 250px;">
+                            <span class="text-muted">
+                                Calendar visualization coming soon...
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</div>
+
+@code {
+    [Parameter]
+    public Guid HabitId { get; set; }
+    private HabitModel? Habit;
+    private HabitStatsModel? StatsModel;
+    private HabitFormModel UpdateModel = new HabitFormModel();
+
+    private bool IsLoading = true;
+    private string? ErrorMessage;
+
+    private bool IsEditing = false;
+    private bool IsSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHabitAsync();
+        await LoadStatsAsync();
+    }
+
+    private async Task HandleSaved(HabitFormModel model)
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var dto = new UpdateHabitDTO
+            {
+                Title = model.Title,
+                Description = model.Description,
+                CategoryId = model.CategoryId,
+                Priority = model.Priority,
+                RepeatInterval = model.RepeatInterval
+            };
+
+            await HabitService.Update(model.Id, dto);
+
+            await ReloadHabit();
+        }
+        catch (AppException ex)
+        {
+            ErrorMessage = ex.Error.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+            IsEditing = false;
+            ErrorMessage = null;
+        }
+    }
+
+    private async Task ReloadHabit()
+    {
+        await LoadHabitAsync();
+        await LoadStatsAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadHabitAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var dto = await HabitService.GetHabitById(HabitId);
+
+            Habit = new HabitModel
+            {
+                Title = dto!.Title,
+                Description = dto.Description,
+                CategoryId = dto.CategoryId,
+                Priority = dto.Priority,
+                RepeatCount = dto.RepeatCount,
+                RepeatPeriod = dto.RepeatPeriod,
+                LastTimeDoneAt = dto.LastTimeDoneAt,
+                CreatedAt = dto.CreatedAt,
+            };
+        }
+        catch (AppException ex)
+        {
+            ErrorMessage = ex.Error.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadStatsAsync()
+    {
+        try
+        {
+            var dto = await HabitStatsService.GetHabtitStatsAsync(HabitId);
+
+            StatsModel = new HabitStatsModel
+            {
+                TotalCompletion = dto.TotalCompletion,
+                CurrentStreak = dto.CurrentStreak,
+                LongestStreak = dto.LongestStreak,
+                CompletitionRate = dto.CompletionRate,
+                TotalTrackedDays = dto.TotalTrackedDays,
+                DaysSinceLastCompletion = dto.DaysSinceLastCompletion,
+            };
+        }
+        catch (AppException ex)
+        {
+            ErrorMessage = ex.Error.Message;
+        }
+    }
+
+    private void OpenEdit()
+    {
+        ErrorMessage = null;
+
+        UpdateModel = new HabitFormModel
+        {
+            Id = HabitId,
+            Title = Habit!.Title,
+            Description = Habit.Description,
+            CategoryId = Habit.CategoryId,
+            Priority = Habit.Priority,
+            RepeatPeriod = Habit.RepeatPeriod,
+        };
+
+        IsEditing = true;
+    }
+
+    private void CloseEdit()
+    {
+        IsEditing = false;
+        ErrorMessage = null;
+    }
+
+}

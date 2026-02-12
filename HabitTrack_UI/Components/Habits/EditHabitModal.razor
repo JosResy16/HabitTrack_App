@@ -1,0 +1,177 @@
+﻿@using HabitTrack_UI.Models
+@using HabitTrack_UI.Services.AppErrorService
+@using HabitTrack_UI.Services.Habits
+@using HabitTracker.Application.DTOs
+@using HabitTracker.Domain
+
+@inject CategoryService CategoryService
+@inject HabitsService HabitService
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Habit</h5>
+                    <button type="button"
+                            class="btn-close"
+                            @onclick="Close">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <EditForm Model="Model" OnValidSubmit="Save">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label class="form-label">Habit name*</label>
+                            <InputText class="form-control"
+                                       @bind-Value="Model.Title"
+                                       placeholder="e.g., do house chores" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description (optional)</label>
+                            <InputTextArea class="form-control"
+                                           rows="3"
+                                           @bind-Value="Model.Description"
+                                           placeholder="Add any notes..." />
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+
+                            @if (IsLoading)
+                            {
+                                <div class="form-text">Loading categories...</div>
+                            }
+                            else if (!string.IsNullOrEmpty(CategoriesError))
+                            {
+                                <div class="text-danger">@CategoriesError</div>
+                            }
+                            else
+                            {
+                                <InputSelect class="form-select"
+                                             @bind-Value="Model.CategoryId">
+                                    <option value="">No category</option>
+                                    @foreach (var category in categories)
+                                    {
+                                        <option value="@category.Id">
+                                            @category.Title
+                                        </option>
+                                    }
+                                </InputSelect>
+                            }
+                        </div>
+
+                        <!-- Priority -->
+                        <div class="mb-3">
+                            <label class="form-label">Priority</label>
+                            <InputSelect class="form-select"
+                                         @bind-Value="Model.Priority">
+                                @foreach (var priority in Enum.GetValues<Priority>())
+                                {
+                                    <option value="@priority">@priority</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <!-- Repeat period -->
+                        <div class="mb-3">
+                            <label class="form-label">Repeat</label>
+                            <InputSelect class="form-select"
+                                         @bind-Value="Model.RepeatPeriod">
+                                <option value="">Select period</option>
+                                @foreach (var period in Enum.GetValues<Period>())
+                                {
+                                    <option value="@period">@period</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        {
+                            <div class="alert alert-danger py-2">
+                                @ErrorMessage
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    @onclick="Close">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-primary"
+                                    disabled="@IsSaving">
+                                @(IsSaving ? "Saving..." : "Save")
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter]
+    public HabitFormModel Model { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<HabitFormModel> OnSaved { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public bool IsSaving { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    private List<CategoryModel> categories = new List<CategoryModel>();
+    private bool IsLoading = true;
+    private string? CategoriesError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+
+        try
+        {
+            categories = await CategoryService.GetCategories();
+        }
+        catch
+        {
+            CategoriesError = "Failed to load categories";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        await OnSaved.InvokeAsync(Model);
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}
