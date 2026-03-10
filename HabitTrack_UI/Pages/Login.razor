@@ -10,9 +10,11 @@
 @using HabitTrack_UI.Services.Auth
 @using HabitTracker.Application.DTOs
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.JSInterop
 
 @inject AuthService AuthService
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <div class="card shadow-sm p-4" style="width: 100%; max-width: 420px;">
 
@@ -80,15 +82,19 @@
 
         try
         {
+            var timeZone = await JS.InvokeAsync<string>("getUserTimeZone");
+            Model.TimeZoneId = timeZone;
+
             var request = new LoginRequest
             {
                 Email = Model.Email,
-                Password = Model.Password
+                Password = Model.Password,
+                TimeZoneId = timeZone,
             };
 
-            await AuthService.LoginAsync(request);
-
-            Nav.NavigateTo("/");
+            var result = await AuthService.LoginAsync(request);
+            if (result.IsSuccess)
+                Nav.NavigateTo("/");
         }
         catch (AppException ex)
         {

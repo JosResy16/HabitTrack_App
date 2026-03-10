@@ -9,48 +9,71 @@
 
 @inject HabitsService HabitService
 @inject HabitStatsService HabitStatsService
+@inject NavigationManager Nav
 
 <div class="container my-4">
     <header class="mb-4">
         <p class="text-muted mb-1">Habit Details</p>
-        <h2 class="fw-bold">
+        <h2 class="fw-bold @GetPausedClass()">
             @Habit?.Title
         </h2>
+        @if (Habit?.IsPaused == true)
+        {
+            <div class="alert alert-warning">
+                This habit is paused. Resume it to continue tracking.
+            </div>
+        }
+        @if (ErrorChangingStatus is not null)
+        {
+            <div class="alert alert-danger py-2">
+                @ErrorChangingStatus
+            </div>
+        }
     </header>
 
     <EditHabitModal Model="UpdateModel"
-                    OnSaved="HandleSaved"
-                    OnClose="CloseEdit"
-                    IsSaving="IsSaving"
-                    ErrorMessage="ErrorMessage"
-                    IsVisible="IsEditing" />
+                    OnSaved="@HandleSaved"
+                    OnClose="@CloseEdit"
+                    IsSaving="@IsSaving"
+                    ErrorMessage="@EditHabitErrorMessage"
+                    IsVisible="@IsEditing" />
 
     <!-- Habit summary stats-->
     <section>
         <div class="row g-3 mb-4">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6 @GetPausedClass()">
                 <StatCard Title="Completed"
                     Value="@($"{StatsModel?.TotalCompletion}")"
-                    Subtitle="Times"/>
+                        Subtitle="Times"/>
             </div>
 
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-3 @GetPausedClass()">
                 <StatCard Title="Current Streak"
                     Value="@($"{StatsModel?.CurrentStreak} days")"
-                    Subtitle="" />
+                        Subtitle=""/>
             </div>
 
-            <div class="col-6 col-md-3">
-                <StatCard Title="Completion rate"
-                    Value="@($"{StatsModel?.CompletitionRate}")"
-                    Subtitle="this week"/>
+            <div class="col-6 col-md-3 @GetPausedClass()">
+                @if (Habit?.IsPaused == true)
+                {
+                    <StatCard Title="Completion rate"
+                        Value="Habit paused"
+                        Subtitle="resume to continue tracking" />
+                }
+                else
+                {
+                    <StatCard Title="Completion rate"
+                        Value="@($"{StatsModel?.CompletitionRate}%")"
+                        Subtitle="in the last 7 days" />
+                }
+             
             </div>
         </div>
     </section>
 
     <!-- Habit details-->
     <section>
-        <dl class="row mb-4">
+        <dl class="row mb-4 @GetPausedClass()">
             <dt class="col-sm-4 text-muted">Description</dt>
             <dd class="col-sm-8">@Habit?.Description</dd>
 
@@ -59,21 +82,34 @@
 
             <dt class="col-sm-4 text-muted">Repeat</dt>
             <dd class="col-sm-8">
-                @Habit?.RepeatPeriod every @Habit?.RepeatCount
+                @(Habit?.RepeatPeriod)
             </dd>
 
             <dt class="col-sm-4 text-muted">Created</dt>
             <dd class="col-sm-8">
-                @Habit?.CreatedAt.ToShortDateString()
+                @(Habit?.CreatedAt.ToShortDateString())
             </dd>
 
-            <div class="d-flex justify-content-end p-2">
-                <button class="btn btn-sm btn-outline-secondary"
-                        @onclick="OpenEdit">
-                    Edit
-                </button>
-            </div>
+            <dt class="col text-muted">Status</dt>
+            <dd class="col-sm-8">
+                @(Habit?.IsPaused == true ? "Paused" : "Active")
+            </dd>
         </dl>
+        <div class="d-flex justify-content-center gap-3 w-100 mt-3">
+            <button class="btn btn-sm btn-outline-warning bg-warning text-white p-1" disabled="@IsChangingStatus"
+                    @onclick="OnChangeStatus">
+                @(Habit?.IsPaused == true ? "Resume" : "Pause")
+            </button>
+            <button class="btn btn-sm btn-outline-primary bg-primary text-white @(Habit?.IsPaused == true ? "paused-button" : "")"
+                    @onclick="OpenEdit" disabled="@(Habit?.IsPaused == true)">
+                Edit
+            </button>
+
+            <button class="btn btn-sm btn-outline-danger bg-danger text-white p-1@(Habit?.IsPaused == true ? "paused-button" : "")"
+                    @onclick="OnDelete" disabled="@(Habit?.IsPaused == true)">
+                Delete
+            </button>
+        </div>
     </section>
 
     <!-- Habit stats-->
@@ -82,7 +118,7 @@
 
             <!-- LEFT: Stats -->
             <div class="col-12 col-lg-4">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm @GetPausedClass()">
                     <div class="card-body">
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between">
@@ -97,7 +133,9 @@
 
                             <li class="list-group-item d-flex justify-content-between">
                                 <span>Days Since Last Completion</span>
-                                <span class="fw-bold">@StatsModel?.DaysSinceLastCompletion</span>
+                                <span class="fw-bold">
+                                    @(StatsModel?.DaysSinceLastCompletion == -1 ? "no data" : StatsModel?.DaysSinceLastCompletion)
+                                </span>
                             </li>
                         </ul>
                     </div>
@@ -107,15 +145,31 @@
             <!-- RIGHT: Graph / Calendar -->
             <div class="col-12 col-lg-8">
                 <div class="card shadow-sm h-100">
-                    <div class="card-body">
+                    <div class="card-body @GetPausedClass()">
                         <h6 class="text-muted mb-3">Activity</h6>
+                        
+                        @if (DailyActivityErrror is not null)
+                        {
+                            <p class="alert-danger">@DailyActivityErrror</p>
+                        }
 
-                        <div class="d-flex justify-content-center align-items-center"
-                             style="min-height: 250px;">
-                            <span class="text-muted">
-                                Calendar visualization coming soon...
-                            </span>
-                        </div>
+                        @if (StartDate != default && EndDate != default)
+                        {
+                            <ActivityHeatmap Data="DailyActivity"
+                                    StartDate="StartDate"
+                                    EndDate="EndDate" />
+
+                            <div class="mt-2">
+                                <small class="text-muted mb-0">Each square represents a day. Darker means more activity.</small>
+                            </div>
+                            <div class="d-flex">
+                                <div class="heatmap-cell level-0"></div>
+                                <div class="heatmap-cell level-1"></div>
+                                <div class="heatmap-cell level-2"></div>
+                                <div class="heatmap-cell level-3"></div>
+                            </div>
+                        }
+
 
                     </div>
                 </div>
@@ -129,26 +183,64 @@
 @code {
     [Parameter]
     public Guid HabitId { get; set; }
+
     private HabitModel? Habit;
     private HabitStatsModel? StatsModel;
     private HabitFormModel UpdateModel = new HabitFormModel();
+    private List<DailyActivityDTO> DailyActivity = new();
+
+    private DateOnly StartDate;
+    private DateOnly EndDate;
+    private string? DailyActivityErrror = null;
 
     private bool IsLoading = true;
-    private string? ErrorMessage;
+    private string? EditHabitErrorMessage = null;
+    private string? ErrorMessage = null;
 
     private bool IsEditing = false;
     private bool IsSaving = false;
+
+    private bool IsChangingStatus = false;
+    private string? ErrorChangingStatus;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadHabitAsync();
         await LoadStatsAsync();
+        await LoadDailyActivity();
+    }
+
+    private async Task OnDelete()
+    {
+        await HabitService.Remove(HabitId);
+
+        Nav.NavigateTo("/");
+    }
+
+    private async Task OnChangeStatus()
+    {
+        IsChangingStatus = true;
+        ErrorChangingStatus = null;
+
+        try
+        {
+            await HabitService.ChangeHabitStatusAsync(HabitId);
+            await ReloadHabit();
+        }
+        catch(AppException ex)
+        {
+            ErrorChangingStatus = ex.Error.Message;
+        }
+        finally
+        {
+            IsChangingStatus = false;
+        }
     }
 
     private async Task HandleSaved(HabitFormModel model)
     {
         IsSaving = true;
-        ErrorMessage = null;
+        EditHabitErrorMessage = null;
 
         try
         {
@@ -162,18 +254,36 @@
             };
 
             await HabitService.Update(model.Id, dto);
-
+            Console.WriteLine(string.Join(",", DailyActivity.Select(d => $"{d.Date}:{d.CompletionsCount}")));
             await ReloadHabit();
         }
         catch (AppException ex)
         {
-            ErrorMessage = ex.Error.Message;
+            EditHabitErrorMessage = ex.Error.Message;
         }
         finally
         {
             IsSaving = false;
             IsEditing = false;
-            ErrorMessage = null;
+            EditHabitErrorMessage = null;
+        }
+    }
+
+    private async Task LoadDailyActivity()
+    {
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            StartDate = today.AddDays(-179);
+            EndDate = today;
+
+            DailyActivity = await HabitStatsService
+                .GetHabitActivityAsync(HabitId, StartDate, EndDate);
+        }
+        catch
+        {
+            DailyActivityErrror = "Something went wrong loading daily activity";
         }
     }
 
@@ -181,13 +291,14 @@
     {
         await LoadHabitAsync();
         await LoadStatsAsync();
+        await LoadDailyActivity();
         StateHasChanged();
     }
 
     private async Task LoadHabitAsync()
     {
         IsLoading = true;
-        ErrorMessage = null;
+        EditHabitErrorMessage = null;
 
         try
         {
@@ -203,11 +314,12 @@
                 RepeatPeriod = dto.RepeatPeriod,
                 LastTimeDoneAt = dto.LastTimeDoneAt,
                 CreatedAt = dto.CreatedAt,
+                IsPaused = dto.IsPaused,
             };
         }
         catch (AppException ex)
         {
-            ErrorMessage = ex.Error.Message;
+            EditHabitErrorMessage = ex.Error.Message;
         }
         finally
         {
@@ -260,4 +372,12 @@
         ErrorMessage = null;
     }
 
+    private string GetPausedClass()
+    {
+        return Habit?.IsPaused switch
+        {
+            true => "paused",
+            _ => ""
+        };
+    }
 }

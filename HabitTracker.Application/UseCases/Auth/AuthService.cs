@@ -1,9 +1,10 @@
-﻿using HabitTracker.Application.DTOs;
+﻿using HabitTracker.Application.Common.Interfaces;
+using HabitTracker.Application.DTOs;
+using HabitTracker.Application.Services;
 using HabitTracker.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
-using HabitTracker.Application.Common.Interfaces;
-using HabitTracker.Application.Services;
+using TimeZoneConverter;
 
 namespace HabitTracker.Application.UseCases.Auth
 {
@@ -43,7 +44,16 @@ namespace HabitTracker.Application.UseCases.Auth
             if (user == null || !user.VerifyPassword(request.Password))
                 return Result<TokenResponseDTO>.Failure("Invalid email or password");
 
-            var tokenResponse = await CreateTokenResponseAsync(user);
+            if (!string.IsNullOrWhiteSpace(request.TimeZoneId))
+            {
+                var windowsId = TZConvert.IanaToWindows(request.TimeZoneId);
+                user.UpdateTimeZone(windowsId);
+            }
+
+            var tokenResponse = CreateTokenResponse(user);
+
+            await _userRepository.SaveChangesAsync();
+
             return Result<TokenResponseDTO>.Success(tokenResponse);
         }
 
@@ -54,7 +64,9 @@ namespace HabitTracker.Application.UseCases.Auth
             if (user == null || !user.IsValidRefreshToken(request.RefreshToken))
                 return Result<TokenResponseDTO>.Failure("Invalid refresh token");
 
-            var tokenResponse = await CreateTokenResponseAsync(user);
+            var tokenResponse = CreateTokenResponse(user);
+
+            await _userRepository.SaveChangesAsync();
 
             return Result<TokenResponseDTO>.Success(tokenResponse);
         }
@@ -66,12 +78,13 @@ namespace HabitTracker.Application.UseCases.Auth
                 return Result.Failure("User not found");
 
             user.UpdateRefreshToken(null, DateTime.UtcNow);
+
             await _userRepository.SaveChangesAsync();
 
             return Result.Success();
         }
 
-        private async Task<TokenResponseDTO> CreateTokenResponseAsync(UserEntity user)
+        private TokenResponseDTO CreateTokenResponse(UserEntity user)
         {
             var refreshToken = GenerateRefreshToken();
 
@@ -79,8 +92,6 @@ namespace HabitTracker.Application.UseCases.Auth
                 refreshToken,
                 DateTime.UtcNow.AddDays(7)
             );
-
-            await _userRepository.SaveChangesAsync();
 
             return new TokenResponseDTO
             {

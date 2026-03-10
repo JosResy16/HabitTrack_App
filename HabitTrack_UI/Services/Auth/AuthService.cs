@@ -3,6 +3,7 @@ using HabitTracker.Application.DTOs;
 using HabitTrack_UI.Models.ErrorModels;
 using HabitTrack_UI.Services.Api;
 using Microsoft.AspNetCore.Components.Authorization;
+using HabitTracker.Application.Services;
 
 namespace HabitTrack_UI.Services.Auth;
 public class AuthService
@@ -27,7 +28,7 @@ public class AuthService
         _errorService = errorService;
     }
 
-    public async Task LoginAsync(LoginRequest request)
+    public async Task<Result> LoginAsync(LoginRequest request)
     {
         var response = await _authApiClient.Login(request);
 
@@ -45,12 +46,14 @@ public class AuthService
                 Message = "An invalid token was received from the server.",
                 Type = ErrorType.Server,
             });
-            return;
+            return Result.Failure("Login failed");
         }
 
         (_authenticationStateProvider as JwtAuthenticationStateProvider)?.NotifyUserAuthenticated(principal);
 
         await _userSession.Initialize(response.AccessToken);
+
+        return Result.Success();
     }
 
     public async Task RegisterAsync(RegisterRequest request)

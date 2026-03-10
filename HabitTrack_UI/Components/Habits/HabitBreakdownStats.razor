@@ -1,0 +1,41 @@
+﻿@using HabitTracker.Application.DTOs
+@inject NavigationManager Navigate
+
+
+<div class="list-group-item d-flex justify-content-between align-items-center">
+
+    <div>
+        <div class="fw-semibold" @onclick="GoToDetails" style="cursor:pointer">
+            @Habit.HabitTitle
+        </div>
+        <small class="text-muted">
+            @Habit.TotalCompletionsThisMonth times completed this month
+        </small>
+    </div>
+
+    <div class="text-end">
+        <span class="badge @(GetBadgeClass())">
+            @Habit.CompletionRateThisMonth% completion rate
+        </span>
+    </div>
+
+</div>
+
+
+@code {
+    [Parameter] public HabitPerformanceDTO Habit { get; set; } = default!;
+
+    private void GoToDetails()
+    {
+        Navigate.NavigateTo($"/habits/{Habit.HabitId}");
+    }
+
+    private string GetBadgeClass()
+    {
+        if (Habit.CompletionRateThisMonth >= 80)
+            return "bg-success";
+        if (Habit.CompletionRateThisMonth >= 50)
+            return "bg-warning text-dark";
+        return "bg-danger";
+    }
+}

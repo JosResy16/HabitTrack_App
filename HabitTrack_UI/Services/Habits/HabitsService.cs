@@ -47,4 +47,14 @@ public class HabitsService
     {
         await _api.Update(id, habit);
     }
+
+    public async Task Remove(Guid HabitId)
+    {
+        await _api.Remove(HabitId);
+    }
+
+    public async Task ChangeHabitStatusAsync(Guid habitId)
+    {
+        await _api.ChangeStatus(habitId);
+    }
 }

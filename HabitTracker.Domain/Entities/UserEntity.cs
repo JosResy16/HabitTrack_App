@@ -1,7 +1,6 @@
 ﻿
 
 using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
 
 namespace HabitTracker.Domain.Entities
 {
@@ -20,6 +19,8 @@ namespace HabitTracker.Domain.Entities
 
         public string? PasswordResetToken { get; private set; }
         public DateTime? PasswordResetTokenExpiry { get; private set; }
+
+        public string? TimeZoneId {  get; private set; }
 
         private UserEntity() { }
 
@@ -67,6 +68,11 @@ namespace HabitTracker.Domain.Entities
         {
             PasswordResetToken = null;
             PasswordResetTokenExpiry = null;
+        }
+
+        public void UpdateTimeZone(string timeZone)
+        {
+            TimeZoneId = timeZone;
         }
     }
 }

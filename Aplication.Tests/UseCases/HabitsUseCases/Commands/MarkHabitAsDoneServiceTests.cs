@@ -12,6 +12,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         private Mock<IHabitRepository> _habitRepositoryMock;
         private Mock<IUserContextService> _userContextServiceMock;
         private Mock<IHabitLogService> _habitLogServiceMock;
+        private Mock<IUserDataTimeService> _userDataTimeService;
         private HabitServices _habitService;
 
         [SetUp]
@@ -20,7 +21,8 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             _habitRepositoryMock = new Mock<IHabitRepository>();
             _userContextServiceMock = new Mock<IUserContextService>();
             _habitLogServiceMock = new Mock<IHabitLogService>();
-            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object, _habitLogServiceMock.Object);
+            _userDataTimeService = new Mock<IUserDataTimeService>();
+            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object, _habitLogServiceMock.Object, _userDataTimeService.Object);
         }
 
         [Test]

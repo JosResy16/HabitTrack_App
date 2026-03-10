@@ -7,43 +7,73 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
+
         <NavLink class="navbar-brand" href="">
             HabitTrack
         </NavLink>
 
-        <button class="navbar-toggler" type="button"
+        <!-- Mobile toggler -->
+        <button class="navbar-toggler"
+                type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#mainNavbar">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="mainNavbar">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                        Home
-                    </NavLink>
-                </li>
-            </ul>
 
             <AuthorizeView>
-                <Authorized>
-                    <span class="navbar-text me-3">
-                        @context.User.FindFirst(ClaimTypes.Email)?.Value
-                    </span>
 
-                    <LogoutButton></LogoutButton>
+                <Authorized>
+
+                    <!-- RIGHT SIDE -->
+                    <ul class="navbar-nav ms-auto align-items-lg-center">
+
+                        <!-- HOME ICON -->
+                        <li class="">
+                            <NavLink class="nav-link home-icon"
+                                     href=""
+                                     Match="NavLinkMatch.All">
+                                <i class="bi bi-house"></i>
+                            </NavLink>
+                        </li>
+
+                        <!-- EMAIL -->
+                        <li class="">
+                            <span class="nav-link">
+                                @context.User.FindFirst(ClaimTypes.Email)?.Value
+                            </span>
+                        </li>
+
+                        <!-- LOGOUT -->
+                        <li class="">
+                            <LogoutButton />
+                        </li>
+
+                    </ul>
+
                 </Authorized>
 
                 <NotAuthorized>
-                    <NavLink class="btn btn-outline-light btn-sm me-2" href="login">
-                        Login
-                    </NavLink>
-                    <NavLink class="btn btn-light btn-sm" href="register">
-                        Register
-                    </NavLink>
+
+                    <div class="ms-auto d-flex gap-2">
+
+                        <NavLink class="btn btn-outline-light btn-sm"
+                                 href="login">
+                            Login
+                        </NavLink>
+
+                        <NavLink class="btn btn-light btn-sm"
+                                 href="register">
+                            Register
+                        </NavLink>
+
+                    </div>
+
                 </NotAuthorized>
+
             </AuthorizeView>
+
         </div>
     </div>
 </nav>

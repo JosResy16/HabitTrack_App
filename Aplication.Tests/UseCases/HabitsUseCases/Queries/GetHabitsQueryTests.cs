@@ -73,7 +73,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
         }
         #endregion
 
-        #region GetHabitsAsync
+        #region GetUserHabitsAsync
         [Test]
         public async Task GetUserHabits_WhenHabitsExist_ReturnSuccess()
         {
@@ -503,5 +503,76 @@ namespace Application.Tests.UseCases.HabitsUseCases.Queries
             Assert.That(result.Value, Is.Empty);
         }
         #endregion
+
+        #region GetActiveHabits
+        public async Task GetActiveHabits_WhenHabitsExist_ReturnSuccess()
+        {
+            var userId = Guid.NewGuid();
+            var habits = new List<HabitEntity>
+            {
+                new HabitEntity(userId, "habit 1", null, null, null),
+                new HabitEntity(userId, "habit 2", null, null, null)
+            };
+                
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
+            _habitRepositoryMock.Setup(x => x.GetActiveHabits(userId, null)).ReturnsAsync(habits);
+
+            var response = await _habitQueryService.GetActiveHabitsAsync();
+
+            Assert.That(response.IsSuccess, Is.True);
+            Assert.That(response.Value.Count(), Is.EqualTo(2));
+
+            Assert.That(response.Value.First().Title, Is.EqualTo("habit 1"));
+            Assert.That(response.Value.Last().Title, Is.EqualTo("habit 2"));
+
+            _habitRepositoryMock.Verify(x => x.GetActiveHabits(userId, null), Times.Once);
+        }
+
+        public async Task GetActiveHabits_WhenHabitsNotExist_ReturnEmptyList()
+        {
+            var userId = Guid.NewGuid();
+                
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId())
+                .Returns(Result<Guid>.Success(userId));
+
+            _habitRepositoryMock.Setup(x => x.GetActiveHabits(userId, null))
+                .ReturnsAsync(new List<HabitEntity>());
+
+            var result = await _habitQueryService.GetActiveHabitsAsync();
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.Count, Is.EqualTo(0));
+
+            _habitRepositoryMock.Verify(x => x.GetActiveHabits(userId, null), Times.Once);
+        }
+
+        public async Task GetActiveHabits_RecivesPriorityFilter_ReturnFilterList()
+        {
+            var userId = Guid.NewGuid();
+            var filteredList = new List<HabitEntity>
+            {
+                new HabitEntity(userId, "title 1", null, null, null) {Priority = Priority.High},
+                new HabitEntity(userId, "title 2", null, null, null) {Priority = Priority.High}
+            };
+
+            _userContextServiceMock.Setup(x => x.GetCurrentUserId())
+                .Returns(Result<Guid>.Success(Guid.NewGuid()));
+            _habitRepositoryMock.Setup(x => x.GetActiveHabits(userId, null))
+                .ReturnsAsync(filteredList);
+
+            var result = await _habitQueryService.GetActiveHabitsAsync(Priority.High);
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Value.Count, Is.EqualTo(2));
+
+            Assert.That(result.Value.First().Title, Is.EqualTo("habit 1"));
+            Assert.That(result.Value.Last().Title, Is.EqualTo("habit 2"));
+
+            _habitRepositoryMock.Verify(x => x.GetActiveHabits(userId, null), Times.Once);
+        }
+
+        #endregion
+
+        
     }
 }

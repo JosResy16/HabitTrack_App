@@ -14,11 +14,13 @@ namespace HabitTrack_API.Controllers
     {
         private readonly IHabitsService _habitService;
         private readonly IHabitQueryService _habitQueryService;
+        private readonly IUserDataTimeService _userTimeService;
 
-        public HabitController(IHabitsService habitsService, IHabitQueryService habitQueryService)
+        public HabitController(IHabitsService habitsService, IHabitQueryService habitQueryService, IUserDataTimeService userDataTimeService)
         {
             _habitService = habitsService;
             _habitQueryService = habitQueryService;
+            _userTimeService = userDataTimeService;
         }
 
         [HttpGet]
@@ -38,7 +40,7 @@ namespace HabitTrack_API.Controllers
         [HttpGet("today")]
         public async Task<IActionResult> GetTodayHabitsAsync([FromQuery]DateOnly? day)
         {
-            var habits = await _habitQueryService.GetTodayHabitsAsync(day ?? DateOnly.FromDateTime(DateTime.UtcNow));
+            var habits = await _habitQueryService.GetTodayHabitsAsync(day ?? await _userTimeService.GetTodayAsync());
             return FromResult(habits);
         }
 
@@ -94,6 +96,13 @@ namespace HabitTrack_API.Controllers
         public async Task<IActionResult> RemoveAsync(Guid habitId)
         {
             var result = await _habitService.RemoveHabitAsync(habitId);
+            return FromResult(result);
+        }
+
+        [HttpPost("{habitId}/change-status")]
+        public async Task<IActionResult> ChangeHabitStatusAsync(Guid habitId)
+        {
+            var result = await _habitService.ChangeHabitStatusAsync(habitId);
             return FromResult(result);
         }
 

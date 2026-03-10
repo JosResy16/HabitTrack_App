@@ -10,7 +10,7 @@ namespace HabitTracker.Application.DTOs
         public string Title { get; set; } = string.Empty;
 
         [MaxLength(150, ErrorMessage = "Description too long (max 150 chars)")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
 
         public Guid? CategoryId { get; set; }
         public Priority? Priority { get; set; }

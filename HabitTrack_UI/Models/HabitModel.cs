@@ -10,7 +10,8 @@ public class HabitModel
     public Priority? Priority { get; set; }
     public int RepeatCount { get; set; }
     public Period? RepeatPeriod { get; set; }
-    public DateTime? LastTimeDoneAt { get; set; }
+    public DateOnly? LastTimeDoneAt { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool? IsPaused { get; set; }
 }
 

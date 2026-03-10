@@ -15,7 +15,8 @@ namespace HabitTracker.Application.DTOs
         public int? RepeatInterval { get; set; }
         public Period? RepeatPeriod { get; set; }
         public TimeOnly? Duration { get; set; }
-        public DateTime? LastTimeDoneAt { get; set; }
+        public DateOnly? LastTimeDoneAt { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsPaused { get; set; }
     }
 }

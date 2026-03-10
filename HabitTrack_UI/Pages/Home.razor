@@ -45,7 +45,7 @@
             </div>
 
             <div class="col-12 col-md-8">
-                <TodayHabitList Habits="TodayHabits"
+                <TodayHabitList Habits="TodayActiveHabits"
                                 OnToggleHabit="ToggleHabitAsync"
                                 Title="Your Habits" />
             </div>
@@ -56,15 +56,11 @@
 
 
 @code{
-    private List<HabitTodayDTO> TodayHabits = new();
+    private List<HabitTodayDTO> TodayActiveHabits = new();
     private TodaySummaryDTO? TodaySummary;
 
-    private int TotalHabits => TodayHabits.Count;
-    private int CompletedHabits => TodayHabits.Count(h => h.IsCompletedToday);
     private bool IsLoading;
     private string? LoadError;
-
-    private DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
 
     protected override async Task OnInitializedAsync()
     {
@@ -78,7 +74,7 @@
 
         try
         {
-            TodayHabits = await HabitsService.GetTodayHabits(today);
+            TodayActiveHabits = await HabitsService.GetTodayHabits(null);
         }
         catch
         {
@@ -102,32 +98,19 @@
 
     private async Task ToggleHabitAsync(HabitTodayDTO habit)
     {
-        var previousValue = habit.IsCompletedToday;
-
-        Console.WriteLine("Toggle Habit Clicked:...");
         try
         {
             if (!habit.IsCompletedToday)
-            {
                 await HabitsService.MarkCompleted(habit.Id);
-                habit.IsCompletedToday = true;
-                habit.LastTimeDoneAt = DateOnly.FromDateTime(DateTime.UtcNow);
-            }
             else
-            {
                 await HabitsService.UndoHabitCompletion(habit.Id);
-                habit.IsCompletedToday = false;
-                habit.LastTimeDoneAt = null;
-            }
 
-            TodaySummary = await StatsService.GetTodaySummary();
+            await LoadTodayHabits();
         }
         catch
         {
-            //TODO: show Toast error
-            habit.IsCompletedToday = previousValue;
+            // show toast
         }
-
     }
 }
 

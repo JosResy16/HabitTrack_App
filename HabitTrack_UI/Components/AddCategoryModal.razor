@@ -1,0 +1,62 @@
+﻿@if (IsOpen)
+{
+    <div class="modal-backdrop fade show"></div>
+
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">New Category</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <InputText class="form-control"
+                               @bind-Value="CategoryName"
+                               placeholder="Category name" />
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary"
+                            @onclick="Close">
+                        Cancel
+                    </button>
+
+                    <button class="btn btn-primary"
+                            @onclick="Save"
+                            disabled="@string.IsNullOrWhiteSpace(CategoryName)">
+                        Save
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter] public EventCallback<string> OnCategoryCreated { get; set; }
+
+    private string CategoryName = string.Empty;
+
+    private async Task Save()
+    {
+        await OnCategoryCreated.InvokeAsync(CategoryName);
+
+        CategoryName = string.Empty;
+
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task Close()
+    {
+        CategoryName = string.Empty;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

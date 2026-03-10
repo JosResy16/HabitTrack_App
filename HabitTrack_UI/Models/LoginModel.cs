@@ -11,5 +11,6 @@ namespace HabitTrack_UI.Models
         [Required(ErrorMessage = "Password required")]
         [MinLength(8, ErrorMessage = "Min 8 characters")]
         public string Password { get; set; } = string.Empty;
+        public string TimeZoneId { get; set; }
     }
 }

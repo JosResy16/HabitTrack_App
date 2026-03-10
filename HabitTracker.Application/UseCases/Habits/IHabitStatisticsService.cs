@@ -10,8 +10,9 @@ namespace HabitTracker.Application.UseCases.Habits
         Task<Result<int>> GetCurrentStreakAsync(Guid habitId);
         Task<Result<int>> GetLongestStreakAsync(Guid habitId);
 
-        Task<Result<UserStatsDTO>> GetSummaryAsync();
         Task<Result<TodaySummaryDTO>> GetTodaySummaryAsync();
         Task<Result<HabitStatsDTO>> GetHabtitStatsAsync(Guid habitId);
+        Task<Result<UserStatsDTO>> GetUserStatsAsync(DateOnly startDate, DateOnly endDate);
+        Task<Result<List<DailyActivityDTO>>> GetHabitActivityAsync(Guid habitId, DateOnly startDate, DateOnly endDate);
     }
 }

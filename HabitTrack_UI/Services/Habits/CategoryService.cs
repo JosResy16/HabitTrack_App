@@ -1,5 +1,6 @@
 ﻿using HabitTrack_UI.Models;
 using HabitTrack_UI.Services.Api;
+using HabitTracker.Application.DTOs;
 
 namespace HabitTrack_UI.Services.Habits;
 public class CategoryService
@@ -20,6 +21,11 @@ public class CategoryService
                 Id = c.Id.ToString(),
                 Title = c.Title,
             }).ToList();
+    }
+
+    public async Task<CategoryResponseDTO> Create(CategoryRequestDTO request)
+    {
+        return await _api.Create(request);
     }
 }
 

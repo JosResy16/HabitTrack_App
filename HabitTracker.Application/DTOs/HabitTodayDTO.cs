@@ -10,5 +10,6 @@ public class HabitTodayDTO
     public Priority? Priority { get; set; }
     public bool IsCompletedToday { get; set; }
     public DateOnly? LastTimeDoneAt { get; set; }
+    public bool IsPaused {  get; set; }
 }
 

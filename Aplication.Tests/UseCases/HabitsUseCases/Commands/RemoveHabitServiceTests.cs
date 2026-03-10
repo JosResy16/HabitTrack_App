@@ -4,8 +4,6 @@ using HabitTracker.Application.UseCases.Habits;
 using HabitTracker.Domain;
 using HabitTracker.Domain.Entities;
 using Moq;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace Application.Tests.UseCases.HabitsUseCases.Commands
 {
@@ -13,7 +11,8 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
     {
         private Mock<IHabitRepository> _habitRepositoryMock;
         private Mock<IUserContextService> _userContextServiceMock;
-        private Mock<IHabitLogService> _habitLogRepositoryMock;
+        private Mock<IHabitLogService> _habitLogServiceMock;
+        private Mock<IUserDataTimeService> _userDataTimeService;
         private HabitServices _habitService;
 
         [SetUp]
@@ -21,8 +20,9 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         {
             _habitRepositoryMock = new Mock<IHabitRepository>();
             _userContextServiceMock = new Mock<IUserContextService>();
-            _habitLogRepositoryMock = new Mock<IHabitLogService>();
-            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object, _habitLogRepositoryMock.Object);
+            _habitLogServiceMock = new Mock<IHabitLogService>();
+            _userDataTimeService = new Mock<IUserDataTimeService>();
+            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object, _habitLogServiceMock.Object, _userDataTimeService.Object);
         }
 
         [Test]
@@ -33,7 +33,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
 
             _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
             _habitRepositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(habit);
-            _habitLogRepositoryMock.Setup(r => r.AddLogAsync(habit.Id, ActionType.Removed))
+            _habitLogServiceMock.Setup(r => r.AddLogAsync(habit.Id, ActionType.Removed))
                 .ReturnsAsync(Result.Success());
             _habitRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
@@ -42,7 +42,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(habit.IsDeleted, Is.True);
 
-            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(habit.Id, ActionType.Removed), Times.Once);
+            _habitLogServiceMock.Verify(l => l.AddLogAsync(habit.Id, ActionType.Removed), Times.Once);
             _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
 
@@ -61,7 +61,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ErrorMessage, Is.EqualTo("Habit not found"));
 
-            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitLogServiceMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
             _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
@@ -81,7 +81,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ErrorMessage, Is.EqualTo("Not authorized"));
 
-            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitLogServiceMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
             _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
@@ -101,7 +101,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
 
             Assert.That(result.IsSuccess, Is.True);
 
-            _habitLogRepositoryMock.Verify(
+            _habitLogServiceMock.Verify(
                 l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()),
                 Times.Never);
 

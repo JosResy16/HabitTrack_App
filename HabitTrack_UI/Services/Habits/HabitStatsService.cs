@@ -25,5 +25,20 @@ public class HabitStatsService
     {
         return await _api.GetHabitStatsAsync(habitId);
     }
+
+    public async Task<UserStatsDTO> GetPastThreeMonthsStats()
+    {
+        return await _api.GetPastThreeMonthsStats();
+    }
+
+    public async Task<List<DailyActivityDTO>> GetHabitActivityAsync(Guid habitId, DateOnly startDate, DateOnly endDate)
+    {
+        return await _api.GetHabitActivityAsync(habitId, startDate, endDate);
+    }
+
+    public async Task<double> GetCompletionRateForHabitAsync(Guid habitId, DateOnly startDate, DateOnly endDate)
+    {
+        return await _api.GetCompletionRateForHabitAsync(habitId, startDate, endDate);
+    }
 }
 

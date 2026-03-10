@@ -33,16 +33,25 @@ namespace HabitTracker.Application.UseCases.Habits
 
         public async Task<Result<HabitResponseDTO>> GetHabitByIdAsync(Guid habitId)
         {
-            var userId = _userContextService.GetCurrentUserId();
+            var userId = _userContextService.GetCurrentUserId().Value;
 
             var habit = await _habitRepository.GetByIdAsync(habitId);
             if (habit == null)
                 return Result<HabitResponseDTO>.Failure("Habit not found");
 
-            if (habit.UserId != userId.Value)
+            if (habit.UserId != userId)
                 return Result<HabitResponseDTO>.Failure("Not authorized");
 
-            return Result<HabitResponseDTO>.Success(MappingToHabitResponseDto(habit));
+            var logs = await _habitLogRepository.GetLogsByHabitIdAsync(userId, habit.Id);
+            var lastTimeDoneAt = logs
+                .Where(l => l.ActionType == ActionType.Completed)
+                .OrderByDescending(l => l.Date)
+                .FirstOrDefault();
+
+            var response = MappingToHabitResponseDto(habit);
+            response.LastTimeDoneAt = lastTimeDoneAt?.Date;
+
+            return Result<HabitResponseDTO>.Success(response);
         }
 
         public async Task<Result<IEnumerable<HabitHistoryDTO>>> GetHabitHistoryAsync(Guid habitId)
@@ -99,11 +108,19 @@ namespace HabitTracker.Application.UseCases.Habits
 
             foreach (var habit in todayHabitsBase)
             {
-                var lastLog = await _habitLogRepository
-                    .GetLastLogForDateAsync(userId.Value, habit.Id, day);
+                var logs = await _habitLogRepository
+                    .GetLogsBetweenDatesForHabitAsync(userId.Value, habit.Id, day);
 
-                bool isCompletedToday =
-                    lastLog?.ActionType == ActionType.Completed;
+                var completedCount = logs.Count(l => l.ActionType == ActionType.Completed);
+
+                var undoneCount = logs.Count(l => l.ActionType == ActionType.Undone);
+
+                bool isCompletedToday = completedCount > undoneCount;
+
+                var lastTimeDoneAt = logs
+                    .Where(l => l.ActionType == ActionType.Completed)
+                    .OrderByDescending(l => l.Date)
+                    .FirstOrDefault()?.Date;
 
                 result.Add(new HabitTodayDTO
                 {
@@ -113,7 +130,8 @@ namespace HabitTracker.Application.UseCases.Habits
                     CategoryId = habit.CategoryId,
                     Priority = habit.Priority,
                     IsCompletedToday = isCompletedToday,
-                    LastTimeDoneAt = lastLog?.Date
+                    LastTimeDoneAt = lastTimeDoneAt,
+                    IsPaused = habit.IsPaused,
                 });
             }
 
@@ -159,6 +177,19 @@ namespace HabitTracker.Application.UseCases.Habits
             return Result<IEnumerable<HabitTodayDTO>>.Success(habits);
         }
 
+        public async Task<Result<IEnumerable<HabitResponseDTO>>> GetActiveHabitsAsync(Priority? priority = null)
+        {
+            var userId = _userContextService.GetCurrentUserId().Value;
+
+            var habits = await _habitRepository.GetActiveHabits(userId, priority);
+
+            var habitsResponseDto = habits.Select(h => MappingToHabitResponseDto(h)).ToList();
+
+            return Result<IEnumerable<HabitResponseDTO>>.Success(habitsResponseDto);
+        }
+
+
+
         private static bool HabitAppliesToDate(HabitEntity habit, DateOnly day)
         {
             if (habit.RepeatPeriod == null)
@@ -186,8 +217,8 @@ namespace HabitTracker.Application.UseCases.Habits
                 RepeatInterval = habit.RepeatInterval,
                 RepeatPeriod = habit.RepeatPeriod,
                 Duration = habit.Duration,
-                LastTimeDoneAt = habit.LastTimeDoneAt,
                 CreatedAt = habit.CreatedAt,
+                IsPaused = habit.IsPaused,
             };
         }
 

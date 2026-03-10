@@ -17,7 +17,7 @@
         else
         {
             <ul class="list-group list-group-flush">
-                @foreach (var habit in Habits)
+                @foreach (var habit in HabitsToDisplay)
                 {
                     <li class="list-group-item px-0">
                         <HabitItem @key="habit.Id"
@@ -28,10 +28,25 @@
             </ul>
         }
     </div>
+    <button class="btn btn-link" @onclick="ToggleView">
+        @(ShowAll ? "Show less" : "View all")
+    </button>
 </div>
 
 @code {
     [Parameter] public List<HabitTodayDTO> Habits { get; set; } = [];
     [Parameter] public EventCallback<HabitTodayDTO> OnToggleHabit { get; set; }
     [Parameter] public string Title { get; set; } = "Your Habits";
+
+    private bool ShowAll = false;
+
+    private IEnumerable<HabitTodayDTO> HabitsToDisplay =>
+    ShowAll
+        ? Habits.OrderBy(h => h.IsPaused)
+        : Habits.Where(h => !h.IsPaused);
+
+    private void ToggleView()
+    {
+        ShowAll = !ShowAll;
+    }
 }

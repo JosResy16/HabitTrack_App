@@ -37,6 +37,7 @@
                             <label class="form-label">Description (optional)</label>
                             <InputTextArea class="form-control"
                                            rows="3"
+                                           style="resize: none"
                                            @bind-Value="Model.Description"
                                            placeholder="Add any notes..." />
                         </div>
@@ -88,12 +89,15 @@
                                 <option value="">Select period</option>
                                 @foreach (var period in Enum.GetValues<Period>())
                                 {
-                                    <option value="@period">@period</option>
+                                    if (period == Period.Daily)
+                                    {
+                                        <option value="@period">@period</option>
+                                    }
                                 }
                             </InputSelect>
                         </div>
 
-                        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                        @if (ErrorMessage is not null)
                         {
                             <div class="alert alert-danger py-2">
                                 @ErrorMessage

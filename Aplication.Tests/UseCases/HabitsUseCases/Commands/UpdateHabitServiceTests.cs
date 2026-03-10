@@ -12,7 +12,8 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
     {
         private Mock<IHabitRepository> _habitRepositoryMock;
         private Mock<IUserContextService> _userContextServiceMock;
-        private Mock<IHabitLogService> _habitLogRepositoryMock;
+        private Mock<IHabitLogService> _habitLogServiceMock;
+        private Mock<IUserDataTimeService> _userDataTimeService;
         private HabitServices _habitService;
 
         [SetUp]
@@ -20,8 +21,9 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
         {
             _habitRepositoryMock = new Mock<IHabitRepository>();
             _userContextServiceMock = new Mock<IUserContextService>();
-            _habitLogRepositoryMock = new Mock<IHabitLogService>();
-            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object, _habitLogRepositoryMock.Object);
+            _habitLogServiceMock = new Mock<IHabitLogService>();
+            _userDataTimeService = new Mock<IUserDataTimeService>();
+            _habitService = new HabitServices(_habitRepositoryMock.Object, _userContextServiceMock.Object, _habitLogServiceMock.Object, _userDataTimeService.Object);
         }
 
         [Test]
@@ -37,7 +39,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             _habitRepositoryMock.Setup(r => r.GetByTitleAsync(userId, It.IsAny<string>()))
                 .ReturnsAsync((HabitEntity?)null);
 
-            _habitLogRepositoryMock.Setup(r => r.AddLogAsync(habitId, ActionType.Updated))
+            _habitLogServiceMock.Setup(r => r.AddLogAsync(habitId, ActionType.Updated))
                 .ReturnsAsync(Result.Success());
             _habitRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
@@ -48,7 +50,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             Assert.That(result.Value?.Title, Is.EqualTo("new title"));
 
             _habitRepositoryMock.Verify(r => r.GetByTitleAsync(userId, It.IsAny<string>()), Times.Once);
-            _habitLogRepositoryMock.Verify(r => r.AddLogAsync(habitId, ActionType.Updated), Times.Once);
+            _habitLogServiceMock.Verify(r => r.AddLogAsync(habitId, ActionType.Updated), Times.Once);
             _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
 
@@ -69,7 +71,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             Assert.That(result.ErrorMessage, Is.EqualTo("Habit not found"));
 
             _habitRepositoryMock.Verify(r => r.GetByTitleAsync(userId, It.IsAny<string>()), Times.Never);
-            _habitLogRepositoryMock.Verify(r => r.AddLogAsync(habitId, ActionType.Updated), Times.Never);
+            _habitLogServiceMock.Verify(r => r.AddLogAsync(habitId, ActionType.Updated), Times.Never);
             _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
@@ -90,7 +92,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             Assert.That(response.ErrorMessage, Is.EqualTo("Not authorized"));
 
             _habitRepositoryMock.Verify(r => r.GetByTitleAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
-            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitLogServiceMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
             _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 
@@ -113,7 +115,7 @@ namespace Application.Tests.UseCases.HabitsUseCases.Commands
             Assert.That(response.IsSuccess, Is.False);
             Assert.That(response.ErrorMessage, Is.EqualTo("Already exists an habit with the same Title"));
 
-            _habitLogRepositoryMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
+            _habitLogServiceMock.Verify(l => l.AddLogAsync(It.IsAny<Guid>(), It.IsAny<ActionType>()), Times.Never);
             _habitRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
         }
 

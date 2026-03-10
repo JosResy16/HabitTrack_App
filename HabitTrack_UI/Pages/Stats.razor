@@ -1,7 +1,156 @@
 ﻿@page "/stats"
 
-<h3>Stats</h3>
+@using HabitTrack_UI.Components.Dashboard
+@using HabitTrack_UI.Components.Habits
+@using HabitTrack_UI.Models
+@using HabitTrack_UI.Services.AppErrorService
+@using HabitTrack_UI.Services.Habits
+@using HabitTracker.Application.DTOs
+
+@inject HabitStatsService StatsService
+
+<div class="my-4">
+    @if (UserStats == null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <header class="mb-4">
+            <p class="text-muted mb-1">Habit Details</p>
+            <h2 class="fw-bold">
+                Global stats
+            </h2>
+        </header>
+
+        <section class="mb-5">
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <StatCard Title="Total habits"
+                              Value="@($"{UserStats.TotalActiveHabits}")"
+                              Subtitle="Active" />
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <StatCard Title="Total completions"
+                              Value="@($"{UserStats.TotalCompletions}")"
+                              Subtitle="" />
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <StatCard Title="This month"
+                          Value="@($"{UserStats.ActiveDaysThisMonth} of {UserStats.TotalDaysThisMonth} days")"
+                          Subtitle="@($"{UserStats.ActiveDaysPercentageThisMonth}% active")" />
+                </div>
+
+                <div class="col-6 col-md-3">
+                   <StatCard Title="Consistency streak"
+                          Value="@($"{UserStats.CurrentStreak} days in a row")"
+                          Subtitle="At least one habit completed daily" />
+                </div>
+
+                <div class="col-6 col-md-3">
+                   <StatCard Title="Paused habits"
+                          Value="@($"{UserStats.TotalPausedHabits}")"
+                          Subtitle="currently paused" />
+                </div>
+            </div>
+        </section class="mb-5">
+
+        <section class="mb-5">
+
+            <div class="row g-4">
+
+                <!-- LEFT CARD -->
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h5 class="fw-bold mb-0">Consistency Trend</h5>
+                                    <small class="text-muted">
+                                        Last 90 days
+                                    </small>
+                                    <small class="text-muted">
+                                        @DateTime.Now.ToString("MMMM yyyy")
+                                    </small>
+                                </div>
+
+                                <div class="text-muted small">
+                                    @UserStats?.ActiveDaysThisMonth% active days
+                                </div>
+                            </div>
+
+                            <ActivityHeatmap 
+                                Data="@UserStats.MonthlyActivity"
+                                StartDate="@StartDate"
+                                EndDate="@EndDate" />
+                            <div class="mt-2">
+                                <small class="text-muted mb-0">Each square represents a day. Darker means more activity.</small>
+                            </div>
+                            <div class="d-flex">
+                                <div class="heatmap-cell level-0"></div>
+                                <div class="heatmap-cell level-1"></div>
+                                <div class="heatmap-cell level-2"></div>
+                                <div class="heatmap-cell level-3"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT CARD -->
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+
+                            <h5 class="fw-bold mb-3">Habit Performance</h5>
+                            <small class="text-muted">This month</small>
+
+                            @if (!UserStats.HabitBreakdown.Any())
+                            {
+                                <div class="text-center text-muted py-4">
+                                    <p class="mb-1 fw-semibold">No habits yet</p>
+                                    <small>Add your first habit to get started.</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var habit in UserStats.HabitBreakdown)
+                                    {
+                                        <li class="list-group-item px-0">
+                                            <HabitBreakdownStats 
+                                                @key="habit.HabitId"
+                                                Habit="habit" />
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    }
+    
+</div>
 
 @code {
+    private UserStatsDTO? UserStats;
+    private DateOnly StartDate;
+    private DateOnly EndDate;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        StartDate = today.AddDays(-90);
+        EndDate = today;
+
+        UserStats = await StatsService.GetPastThreeMonthsStats();
+    }
 }

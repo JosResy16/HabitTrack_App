@@ -45,7 +45,7 @@ namespace HabitTracker.Domain.Entities
         public int? RepeatInterval { get; set; }
         public Period? RepeatPeriod { get; set; }
         public TimeOnly? Duration { get; set; }
-        public DateTime? LastTimeDoneAt { get; private set; }
+        public bool IsPaused { get; private set; } = false;
 
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
@@ -60,7 +60,7 @@ namespace HabitTracker.Domain.Entities
 
         public void UpdateDetails(
             string title,
-            string description,
+            string? description,
             Priority? priority)
         {
             if (string.IsNullOrWhiteSpace(title))
@@ -70,5 +70,8 @@ namespace HabitTracker.Domain.Entities
             Description = description;
             Priority = priority;
         }
+
+        public void Pause() => IsPaused = true;
+        public void Resume() => IsPaused = false;
     }
 }

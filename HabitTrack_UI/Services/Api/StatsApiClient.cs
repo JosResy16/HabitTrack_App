@@ -1,4 +1,5 @@
-﻿using HabitTracker.Application.DTOs;
+﻿using HabitTrack_UI.Models;
+using HabitTracker.Application.DTOs;
 
 namespace HabitTrack_UI.Services.Api;
 public class StatsApiClient
@@ -23,6 +24,29 @@ public class StatsApiClient
     public async Task<HabitStatsDTO> GetHabitStatsAsync(Guid habtiId)
     {
         return await _api.GetAsync<HabitStatsDTO>($"api/habit-stats/{habtiId}");
+    }
+
+    public async Task<UserStatsDTO> GetPastThreeMonthsStats()
+    {
+        return await _api.GetAsync<UserStatsDTO>("api/habit-stats/past-three-months");
+    }
+
+    public async Task<List<DailyActivityDTO>> GetHabitActivityAsync(Guid habitId, DateOnly startDate, DateOnly endDate)
+    {
+        var url = $"api/habit-stats/{habitId}/activity" +
+              $"?startDate={startDate:yyyy-MM-dd}" +
+              $"&endDate={endDate:yyyy-MM-dd}";
+
+        return await _api.GetAsync<List<DailyActivityDTO>>(url);
+    }
+
+    public async Task<double> GetCompletionRateForHabitAsync(Guid habitId, DateOnly startDate, DateOnly endDate)
+    {
+        var url = $"api/habit-stats/{habitId}/completion-rate" +
+            $"?startDate={startDate:yyyy-MM-dd}" +
+            $"?endDate={endDate:yyyy-MM-dd}";
+
+        return await _api.GetAsync<double>(url);
     }
 }
 

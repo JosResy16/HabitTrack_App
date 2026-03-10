@@ -31,13 +31,6 @@ namespace HabitTrack_API.Controllers
             return Ok(result.Value);
         }
 
-        [HttpPost("login/test")]
-        [AllowAnonymous]
-        public IActionResult Test()
-        {
-            return Ok("LOGIN ENDPOINT REACHED");
-        }
-
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<TokenResponseDTO>> Login(LoginRequest request)

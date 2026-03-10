@@ -12,7 +12,7 @@ internal class HabitStadisticsTests
 {
     private Mock<IHabitLogRepository> _habitLogRepositoryMock;
     private Mock<IUserContextService> _userContextServiceMock;
-    private Mock<IDateTimeProvider> _dateTimeProviderMock;
+    private Mock<IUserDataTimeService> _userDataTimeServiceMock;
     private Mock<IHabitRepository> _habitRepositoryMock;
     private IHabitStatisticsService _habitStadisticsService;
 
@@ -21,15 +21,15 @@ internal class HabitStadisticsTests
     {
         _habitLogRepositoryMock = new Mock<IHabitLogRepository>();
         _userContextServiceMock = new Mock<IUserContextService>();
-        _dateTimeProviderMock = new Mock<IDateTimeProvider>();
+        _userDataTimeServiceMock = new Mock<IUserDataTimeService>();
         _habitRepositoryMock = new Mock<IHabitRepository>();
 
 
         _habitStadisticsService = new HabitStatisticsService(
             _habitLogRepositoryMock.Object,
             _userContextServiceMock.Object,
-            _dateTimeProviderMock.Object,
-            _habitRepositoryMock.Object
+            _habitRepositoryMock.Object,
+            _userDataTimeServiceMock.Object
         );
     }
 
@@ -239,7 +239,7 @@ internal class HabitStadisticsTests
         var userId = Guid.NewGuid();
         var now = new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc);
 
-        _dateTimeProviderMock.Setup(d => d.UtcNow).Returns(now);
+        _userDataTimeServiceMock.Setup(d => d.UtcNow).Returns(now);
         _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
         _habitLogRepositoryMock.Setup(r => r.GetLogsByHabitIdAsync(userId, habitId))
             .ReturnsAsync(new List<HabitLog>());
@@ -261,7 +261,7 @@ internal class HabitStadisticsTests
             new HabitLog(habitId, DateOnly.FromDateTime(now), ActionType.Completed, now)
         };
 
-        _dateTimeProviderMock.Setup(d => d.UtcNow).Returns(now);
+        _userDataTimeServiceMock.Setup(d => d.UtcNow).Returns(now);
         _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
         _habitLogRepositoryMock.Setup(r => r.GetLogsByHabitIdAsync(userId, habitId))
             .ReturnsAsync(logs);
@@ -278,7 +278,7 @@ internal class HabitStadisticsTests
         var userId = Guid.NewGuid();
         var now = new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc);
 
-        _dateTimeProviderMock.Setup(d => d.UtcNow).Returns(now);
+        _userDataTimeServiceMock.Setup(d => d.UtcNow).Returns(now);
         _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
 
         var logs = new List<HabitLog>
@@ -303,7 +303,7 @@ internal class HabitStadisticsTests
         var userId = Guid.NewGuid();
         var now = new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc);
 
-        _dateTimeProviderMock.Setup(d => d.UtcNow).Returns(now);
+        _userDataTimeServiceMock.Setup(d => d.UtcNow).Returns(now);
         _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
 
         var logs = new List<HabitLog>
@@ -328,7 +328,7 @@ internal class HabitStadisticsTests
         var userId = Guid.NewGuid();
         var now = new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc);
 
-        _dateTimeProviderMock.Setup(d => d.UtcNow).Returns(now);
+        _userDataTimeServiceMock.Setup(d => d.UtcNow).Returns(now);
         _userContextServiceMock.Setup(r => r.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
 
         var logs = new List<HabitLog>
@@ -472,6 +472,108 @@ internal class HabitStadisticsTests
         var result = await _habitStadisticsService.GetLongestStreakAsync(habitId);
 
         Assert.That(result.Value, Is.EqualTo(3));
+    }
+
+    #endregion
+
+    #region GetHabitStats
+    [Test]
+    public async Task GetHabitStats_WhenLogsExist_ReturnCorrectTotalCompletion()
+    {
+        var userId = Guid.NewGuid();
+        var habitId = Guid.NewGuid();
+        var today = new DateOnly(2026, 1, 3);
+
+        var logs = new List<HabitLog>
+        {
+            new HabitLog(habitId, today, ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-1), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-2), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc))
+        };
+
+        _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
+
+        _habitLogRepositoryMock.Setup(x => x.GetLogsByHabitIdAsync(userId, habitId))
+            .ReturnsAsync(logs);
+
+        _userDataTimeServiceMock.Setup(x => x.GetTodayAsync()).ReturnsAsync(today);
+
+        _userDataTimeServiceMock.Setup(x => x.UtcNow)
+            .Returns(new DateTime(2026, 1, 3, 10, 0, 0, DateTimeKind.Utc));
+
+        _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId))
+            .ReturnsAsync(new HabitEntity(userId, "habit", null, null, null));
+
+        var result = await _habitStadisticsService.GetHabtitStatsAsync(habitId);
+
+        Assert.That(result.Value.TotalCompletion, Is.EqualTo(3));
+    }
+
+    [Test]
+    public async Task GetHabitStats_CalculateCurrentStreakCorrectly()
+    {
+        var habitId = Guid.NewGuid();
+        var today = new DateOnly(2026, 1, 3);
+        var userId = Guid.NewGuid();
+
+        var logs = new List<HabitLog>
+        {
+            new HabitLog(habitId, today, ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-2), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-3), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-4), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc))
+        };
+
+        _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
+
+        _habitLogRepositoryMock.Setup(x => x.GetLogsByHabitIdAsync(userId, habitId))
+            .ReturnsAsync(logs);
+
+        _userDataTimeServiceMock.Setup(x => x.GetTodayAsync()).ReturnsAsync(today);
+
+        _userDataTimeServiceMock.Setup(x => x.UtcNow)
+            .Returns(new DateTime(2026, 1, 3, 10, 0, 0, DateTimeKind.Utc));
+
+        _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId))
+            .ReturnsAsync(new HabitEntity(userId, "habit", null, null, null));
+
+        var result = await _habitStadisticsService.GetHabtitStatsAsync(habitId);
+
+        Assert.That(result.Value.CurrentStreak, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task GetHabitStats_CalculateLongestStreakCorrectly()
+    {
+        var habitId = Guid.NewGuid();
+        var today = new DateOnly(2026, 1, 3);
+        var userId = Guid.NewGuid();
+
+        var logs = new List<HabitLog>
+        {
+            new HabitLog(habitId, today, ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-1), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-2), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-4), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc)),
+            new HabitLog(habitId, today.AddDays(-5), ActionType.Completed, new DateTime(2026, 1, 10, 10, 0, 0, DateTimeKind.Utc))
+        };
+
+        _userContextServiceMock.Setup(x => x.GetCurrentUserId()).Returns(Result<Guid>.Success(userId));
+
+        _habitLogRepositoryMock.Setup(x => x.GetLogsByHabitIdAsync(userId, habitId))
+            .ReturnsAsync(logs);
+
+        _userDataTimeServiceMock.Setup(x => x.GetTodayAsync()).ReturnsAsync(today);
+
+        _userDataTimeServiceMock.Setup(x => x.UtcNow)
+            .Returns(new DateTime(2026, 1, 3, 10, 0, 0, DateTimeKind.Utc));
+
+        _habitRepositoryMock.Setup(x => x.GetByIdAsync(habitId))
+            .ReturnsAsync(new HabitEntity(userId, "habit", null, null, null));
+
+        var result = await _habitStadisticsService.GetHabtitStatsAsync(habitId);
+
+        Assert.That(result.Value.CurrentStreak, Is.EqualTo(3));
     }
 
     #endregion

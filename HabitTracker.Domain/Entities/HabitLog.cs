@@ -14,7 +14,7 @@ namespace HabitTracker.Domain.Entities
             HabitId = habitId;
             Date = date;
             ActionType = actionType;
-            CreatedAt = createdAt;
+            CreatedAtUtc = createdAt;
         }
 
         [Obsolete("For testing only", true)]
@@ -29,6 +29,6 @@ namespace HabitTracker.Domain.Entities
         public DateOnly Date { get; private set; }
         public ActionType ActionType { get; private set; }
         public HabitEntity? Habit {  get; internal set; }
-        public DateTime CreatedAt { get; private set; }
+        public DateTime CreatedAtUtc { get; private set; }
     }
 }

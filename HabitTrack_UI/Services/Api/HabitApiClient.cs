@@ -66,5 +66,10 @@ public class HabitApiClient
     {
         await _api.DeleteAsync($"api/habits/{id}");
     }
+
+    public async Task ChangeStatus(Guid habitId)
+    {
+        await _api.PostAsync<object>($"api/habits/{habitId}/change-status", null);
+    }
 }
 

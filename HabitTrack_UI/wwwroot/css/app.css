@@ -101,3 +101,84 @@ a, .btn-link {
 code {
     color: #c02d76;
 }
+
+
+.heatmap-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 16px;
+    grid-template-rows: repeat(7, 16px);
+    gap: 4px;
+}
+
+
+.heatmap-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.heatmap-grid-wrapper {
+    display: grid;
+    grid-template-columns: 32px auto;
+}
+
+.heatmap-days {
+    display: grid;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.heatmap-months {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 16px;
+    margin-left: 32px;
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 6px;
+}
+
+.heatmap-week {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.heatmap-cell {
+    width: 16px;
+    height: 16px;
+    border-radius: 1px;
+    background-color: #fef2d4;
+}
+
+.future-day {
+    background-color: darkslategray;
+    opacity: 0.3;
+}
+
+.level-0 {
+    background-color: #ebedf0;
+}
+
+.level-1 {
+    background-color: #9be9a8;
+}
+
+.level-2 {
+    background-color: #40c463;
+}
+
+.level-3 {
+    background-color: #216e39;
+}
+
+.paused {
+    opacity: 0.65;
+    filter: grayscale(30%);
+}
+
+.paused-button {
+    opacity: 0.65;
+    pointer-events: none;
+    cursor: not-allowed;
+}

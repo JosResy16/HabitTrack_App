@@ -26,7 +26,7 @@
                 <!-- Description -->
                 <div class="mb-3">
                     <label class="form-label">Description (optional)</label>
-                    <InputTextArea class="form-control" rows="3" @bind-Value="Model.Description" placeholder="Add any notes or details about this habit..."></InputTextArea>
+                    <InputTextArea class="form-control" rows="3" @bind-Value="Model.Description" style="resize: none" placeholder="Add any notes or details about this habit..."></InputTextArea>
                 </div>
 
                 <!-- Categories -->
@@ -45,11 +45,20 @@
                     {
                         <InputSelect class="form-select" @bind-Value="Model.CategoryId">
                             <option value="">No category</option>
-                            @foreach (var category in categories)
+                            @foreach (var category in Categories)
                             {
                                 <option value="@category.Id">@category.Title</option>
                             }
                         </InputSelect>
+
+                        <button class="btn btn-sm btn-outline-secondary mt-3"
+                                @onclick="() => showCategoryModal = true">
+                            + New Category
+                        </button>
+
+                        <AddCategoryModal IsOpen="showCategoryModal"
+                                          IsOpenChanged="@(value => showCategoryModal = value)"
+                                          OnCategoryCreated="HandleCategoryCreated" />
                     }
                 </div>
 
@@ -71,7 +80,10 @@
                         <option value="">Select period</option>
                         @foreach (var period in Enum.GetValues<Period>())
                         {
-                            <option value="@period">@period</option>
+                            @if(period == Period.Daily)
+                            {
+                                <option value="@period">@period</option>
+                            }
                         }
                     </InputSelect>
                 </div>
@@ -100,19 +112,21 @@
 
 @code {
     private readonly HabitFormModel Model = new HabitFormModel();
-    private List<CategoryModel> categories = new List<CategoryModel>();
+    private List<CategoryModel> Categories = new List<CategoryModel>();
     [Parameter] public EventCallback OnHabitCreated { get; set; }
+
+    private bool showCategoryModal = false;
 
     private bool IsSubmitting = false;
     private bool IsLoading = true;
-    private string? categoriesError;
-    private string? ErrorMessage;
+    private string? categoriesError = null;
+    private string? ErrorMessage = null;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            categories = await CategoryService.GetCategories();
+            Categories = await CategoryService.GetCategories();
         }
         catch
         {
@@ -162,5 +176,19 @@
         Model.CategoryId = null;
         Model.Priority = null;
         Model.RepeatInterval = 1;
+    }
+
+    private async Task HandleCategoryCreated(string name)
+    {
+        var category = new CategoryRequestDTO
+        {
+            Title = name
+        };
+
+        await CategoryService.Create(category);
+
+        Categories = await CategoryService.GetCategories();
+
+        showCategoryModal = false;
     }
 }

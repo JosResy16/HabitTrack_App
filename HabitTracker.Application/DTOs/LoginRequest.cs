@@ -11,5 +11,6 @@ namespace HabitTracker.Application.DTOs
         public string Email { get; set; } = string.Empty;
         [Required(ErrorMessage = "password can not be empty")]
         public string Password { get; set; } = string.Empty;
+        public string TimeZoneId { get; set; } = string.Empty;
     }
 }
