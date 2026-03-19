@@ -1,8 +1,6 @@
 ﻿using HabitTracker.Application.Common.Interfaces;
 using HabitTracker.Application.DTOs;
 using HabitTracker.Application.Services;
-using HabitTracker.Domain;
-using HabitTracker.Domain.Entities;
 
 namespace HabitTracker.Application.UseCases.Habits;
 public class HabitStatisticsService : IHabitStatisticsService
@@ -404,10 +402,10 @@ public class HabitStatisticsService : IHabitStatisticsService
 
     private async Task<int> CalculateCurrentStreakAsync(Guid userId)
     {
-        var today = _userTimeService.GetTodayAsync();
+        var today = await _userTimeService.GetTodayAsync();
         var streak = 0;
 
-        for (var day = today.Result; ; day = day.AddDays(-1))
+        for (var day = today; ; day = day.AddDays(-1))
         {
             var logs = await _habitLogRepository.GetLogsByDateAsync(userId, day);
 
